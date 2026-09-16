@@ -130,6 +130,7 @@ const originalSelectYear=window.selectYear;
 window.selectYear=y=>{
   localStorage.setItem(LAST_READING_YEAR_KEY,String(y));
   originalSelectYear(y);
+  updateReadingDateYears();
 };
 
 document.getElementById("bookForm")?.addEventListener("submit",()=>{
@@ -145,5 +146,88 @@ if(Number.isFinite(rememberedYear)&&rememberedYear>=1900&&rememberedYear<=9999){
   if(!editingId) yearInput.value=rememberedYear;
   render();
 }
+
+// Date controls: keep the reading year filled in while day/month stay free to enter.
+const readingDateControls=[];
+function setupReadingDateControl(id){
+  const hidden=document.getElementById(id);
+  if(!hidden || hidden.dataset.yearPrefillReady) return;
+  hidden.dataset.yearPrefillReady="1";
+  hidden.type="hidden";
+
+  const wrap=document.createElement("div");
+  wrap.style.cssText="display:grid;grid-template-columns:minmax(62px,.7fr) 18px minmax(62px,.7fr) 18px minmax(92px,1fr);align-items:center;border:1.5px solid #111;border-radius:16px;background:#fffafb;overflow:hidden;min-height:48px";
+  wrap.innerHTML=`
+    <input type="number" inputmode="numeric" min="1" max="31" placeholder="DD" aria-label="Day" style="border:0;border-radius:0;background:transparent;text-align:center;padding:13px 8px;box-shadow:none">
+    <span style="text-align:center;color:#756a6f">/</span>
+    <input type="number" inputmode="numeric" min="1" max="12" placeholder="MM" aria-label="Month" style="border:0;border-radius:0;background:transparent;text-align:center;padding:13px 8px;box-shadow:none">
+    <span style="text-align:center;color:#756a6f">/</span>
+    <input type="number" inputmode="numeric" min="1900" max="9999" aria-label="Year" readonly style="border:0;border-radius:0;background:transparent;text-align:center;padding:13px 8px;box-shadow:none;font-weight:800">
+  `;
+  hidden.insertAdjacentElement("afterend",wrap);
+  const [day,month,year]=wrap.querySelectorAll("input");
+  const control={hidden,wrap,day,month,year};
+  readingDateControls.push(control);
+
+  function syncHidden(){
+    const y=Number(year.value),m=Number(month.value),d=Number(day.value);
+    if(!y || !m || !d){
+      hidden.value="";
+      hidden.dispatchEvent(new Event("change",{bubbles:true}));
+      return;
+    }
+    const test=new Date(y,m-1,d);
+    const valid=test.getFullYear()===y && test.getMonth()===m-1 && test.getDate()===d;
+    hidden.value=valid ? `${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
+    hidden.dispatchEvent(new Event("change",{bubbles:true}));
+  }
+
+  day.addEventListener("input",syncHidden);
+  month.addEventListener("input",syncHidden);
+
+  control.syncFromHidden=()=>{
+    const match=String(hidden.value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if(match){
+      year.value=match[1];
+      month.value=String(Number(match[2]));
+      day.value=String(Number(match[3]));
+    }else{
+      day.value="";
+      month.value="";
+      year.value=String(document.getElementById("year")?.value || selectedYear || new Date().getFullYear());
+    }
+  };
+  control.setYear=()=>{
+    year.value=String(document.getElementById("year")?.value || selectedYear || new Date().getFullYear());
+    syncHidden();
+  };
+  control.syncFromHidden();
+}
+
+function updateReadingDateYears(){
+  readingDateControls.forEach(c=>c.setYear());
+}
+
+setupReadingDateControl("dateStarted");
+setupReadingDateControl("dateFinished");
+
+document.getElementById("year")?.addEventListener("input",()=>{
+  const y=Number(document.getElementById("year").value);
+  if(Number.isFinite(y)&&y>=1900&&y<=9999){
+    localStorage.setItem(LAST_READING_YEAR_KEY,String(y));
+    selectedYear=y;
+    updateReadingDateYears();
+  }
+});
+
+const originalEditBook=window.editBook;
+window.editBook=id=>{
+  originalEditBook(id);
+  setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
+};
+
+document.getElementById("bookForm")?.addEventListener("reset",()=>{
+  setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
+});
 
 startCloudSync();

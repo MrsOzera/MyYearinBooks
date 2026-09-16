@@ -31,7 +31,8 @@ async function cloudRequest(method, body){
   const res=await fetch(CLOUD_API+"/state",{
     method,
     headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:body ? JSON.stringify(body) : undefined
+    body:body ? JSON.stringify(body) : undefined,
+    cache:"no-store"
   });
   if(res.status===401) throw new Error("UNAUTHORIZED");
   if(!res.ok) throw new Error("HTTP_"+res.status);
@@ -57,6 +58,94 @@ async function applyCloudState(state){
   showSyncStatus("cloud synced ♡");
 }
 
+function mergeById(cloudItems,localItems){
+  const map=new Map();
+  (localItems||[]).forEach(item=>map.set(item.id,item));
+  // Cloud wins for an item that exists on both devices, while unique local items are kept.
+  (cloudItems||[]).forEach(item=>map.set(item.id,item));
+  return [...map.values()];
+}
+
+function mergeStates(cloud,local){
+  return {
+    books:mergeById(cloud.books,local.books),
+    seriesFolders:mergeById(cloud.seriesFolders,local.seriesFolders)
+  };
+}
+
+let syncInProgress=false;
+async function reconcileWithCloud(){
+  if(syncInProgress)return;
+  syncInProgress=true;
+  try{
+    const cloud=await cloudRequest("GET");
+    const local=getLocalState();
+    const cloudStr=JSON.stringify({
+      books:Array.isArray(cloud.books)?cloud.books:[],
+      seriesFolders:Array.isArray(cloud.seriesFolders)?cloud.seriesFolders:[]
+    });
+    const localStr=JSON.stringify(local);
+    const last=localStorage.getItem(SYNC_LAST_STATE_KEY);
+
+    if(cloudStr===localStr){
+      localStorage.setItem(SYNC_LAST_STATE_KEY,localStr);
+      showSyncStatus("cloud synced ♡");
+      return;
+    }
+
+    const cloudEmpty=(!cloud.books?.length && !cloud.seriesFolders?.length);
+    const localEmpty=(!local.books.length && !local.seriesFolders.length);
+
+    if(cloudEmpty && !localEmpty){
+      await uploadLocalState();
+      return;
+    }
+
+    if(!cloudEmpty && localEmpty){
+      await applyCloudState(cloud);
+      return;
+    }
+
+    // Normal two-device case:
+    // if this device hasn't changed since the last sync, pull the cloud copy.
+    if(last && last===localStr){
+      await applyCloudState(cloud);
+      return;
+    }
+
+    // If the cloud hasn't changed since our last sync, this device has the new changes.
+    if(last && last===cloudStr){
+      await uploadLocalState();
+      return;
+    }
+
+    // First sync on a device, or both sides changed: merge safely.
+    // Cloud wins on matching IDs, but unique books/folders from either side are preserved.
+    const merged=mergeStates(cloud,local);
+    books=merged.books;
+    seriesFolders=merged.seriesFolders;
+    localStorage.setItem(KEY,JSON.stringify(books));
+    localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
+    render();
+    await uploadLocalState();
+  }catch(e){
+    if(e.message==="UNAUTHORIZED"){
+      localStorage.removeItem(SYNC_TOKEN_KEY);
+      const replacement=prompt("Your cloud sync key was not accepted. Enter the current sync key:");
+      if(replacement){
+        localStorage.setItem(SYNC_TOKEN_KEY,replacement.trim());
+        showSyncStatus("checking cloud…");
+      }else{
+        showSyncStatus("cloud sync locked");
+      }
+    }else{
+      showSyncStatus("cloud unavailable");
+    }
+  }finally{
+    syncInProgress=false;
+  }
+}
+
 async function startCloudSync(){
   let token=localStorage.getItem(SYNC_TOKEN_KEY);
   if(!token){
@@ -66,52 +155,41 @@ async function startCloudSync(){
   }
 
   showSyncStatus("checking cloud…");
-  try{
-    const cloud=await cloudRequest("GET");
-    const local=getLocalState();
-    const cloudEmpty=(!cloud.books?.length && !cloud.seriesFolders?.length);
-    const localEmpty=(!local.books.length && !local.seriesFolders.length);
+  await reconcileWithCloud();
 
-    if(cloudEmpty && !localEmpty){
-      await uploadLocalState();
-    }else if(!cloudEmpty && localEmpty){
-      await applyCloudState(cloud);
-    }else if(!cloudEmpty && !localEmpty){
-      const last=localStorage.getItem(SYNC_LAST_STATE_KEY);
-      const localStr=JSON.stringify(local);
-      const cloudStr=JSON.stringify(cloud);
-      if(localStr===cloudStr){
-        localStorage.setItem(SYNC_LAST_STATE_KEY,localStr);
-        showSyncStatus("cloud synced ♡");
-      }else if(last===localStr){
-        await applyCloudState(cloud);
-      }else{
-        await uploadLocalState();
-      }
-    }else{
-      localStorage.setItem(SYNC_LAST_STATE_KEY,JSON.stringify(local));
-      showSyncStatus("cloud synced ♡");
+  // Push local edits quickly.
+  let previous=localStateString();
+  setInterval(async()=>{
+    const current=localStateString();
+    if(current!==previous){
+      previous=current;
+      showSyncStatus("syncing…");
+      try{ await reconcileWithCloud(); }
+      catch(e){ showSyncStatus("sync pending"); }
+      previous=localStateString();
     }
+  },1500);
 
-    let previous=localStateString();
-    setInterval(async()=>{
-      const current=localStateString();
-      if(current!==previous){
-        previous=current;
-        showSyncStatus("syncing…");
-        try{ await uploadLocalState(); }
-        catch(e){ showSyncStatus("sync pending"); }
-      }
-    },1500);
-  }catch(e){
-    if(e.message==="UNAUTHORIZED"){
-      localStorage.removeItem(SYNC_TOKEN_KEY);
-      alert("The sync key was not accepted. Reload the page and enter it again.");
-      showSyncStatus("cloud sync locked");
-    }else{
-      showSyncStatus("cloud unavailable");
+  // Also pull changes made on another device while this page stays open.
+  setInterval(async()=>{
+    if(document.visibilityState==="visible"){
+      await reconcileWithCloud();
+      previous=localStateString();
     }
-  }
+  },8000);
+
+  // iPhone Safari often suspends background pages. Sync immediately when it becomes active again.
+  document.addEventListener("visibilitychange",async()=>{
+    if(document.visibilityState==="visible"){
+      showSyncStatus("checking cloud…");
+      await reconcileWithCloud();
+      previous=localStateString();
+    }
+  });
+  window.addEventListener("focus",async()=>{
+    await reconcileWithCloud();
+    previous=localStateString();
+  });
 }
 
 // Keep historical years available and remember the year currently being entered.

@@ -108,13 +108,22 @@ renderMonths = function(yearBooks){
   }).join("");
 };
 
-// Keep wrapped pie-chart titles visually together, e.g. “series journey”.
+// Keep wrapped pie-chart titles visually together, e.g. “series journey”,
+// and make every visible legend use the same pastel order as the donut slices.
 const pieTitleStyle=document.createElement("style");
 pieTitleStyle.textContent=`
   .pie-card .visual-title{
     line-height:.82;
     margin-bottom:10px;
   }
+  .pie-card .legend-row:nth-child(1) .legend-dot{background:#F4B8C4!important;}
+  .pie-card .legend-row:nth-child(2) .legend-dot{background:#F6DEA8!important;}
+  .pie-card .legend-row:nth-child(3) .legend-dot{background:#BFD7EA!important;}
+  .pie-card .legend-row:nth-child(4) .legend-dot{background:#BFD8C0!important;}
+  .pie-card .legend-row:nth-child(5) .legend-dot{background:#D7C5E8!important;}
+  .pie-card .legend-row:nth-child(6) .legend-dot{background:#F5C6A5!important;}
+  .pie-card .legend-row:nth-child(7) .legend-dot{background:#FADADD!important;}
+  .pie-card .legend-row:nth-child(8) .legend-dot{background:#BFE3DF!important;}
 `;
 document.head.appendChild(pieTitleStyle);
 

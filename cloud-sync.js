@@ -323,4 +323,46 @@ document.getElementById("bookForm")?.addEventListener("reset",()=>{
   setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
 });
 
+// Allow whole Series Notes folders to be deleted from the folder list.
+window.deleteSeriesFolder=id=>{
+  const folder=seriesFolders.find(f=>f.id===id);
+  if(!folder)return;
+  const noteCount=(folder.entries||[]).length;
+  const noteWarning=noteCount?` This will also delete ${noteCount} saved note${noteCount===1?"":"s"}.`:"";
+  if(!confirm(`Delete “${folder.name}”?${noteWarning}`))return;
+  seriesFolders=seriesFolders.filter(f=>f.id!==id);
+  if(activeSeriesFolderId===id){
+    activeSeriesFolderId=null;
+    editingSeriesEntryId=null;
+  }
+  persistSeriesFolders();
+  renderSeriesFolders();
+};
+
+const baseRenderSeriesFolders=renderSeriesFolders;
+renderSeriesFolders=function(){
+  baseRenderSeriesFolders();
+  if(activeSeriesFolderId)return;
+  const cards=[...document.querySelectorAll("#seriesFolderList .series-folder-card")];
+  const ordered=seriesFolders.slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  cards.forEach((card,index)=>{
+    const folder=ordered[index];
+    const openButton=card.querySelector(".series-folder-open");
+    if(!folder||!openButton||card.querySelector(".series-folder-delete"))return;
+    const actions=document.createElement("div");
+    actions.className="series-note-actions";
+    openButton.replaceWith(actions);
+    actions.appendChild(openButton);
+    const deleteButton=document.createElement("button");
+    deleteButton.type="button";
+    deleteButton.className="icon-btn series-folder-delete";
+    deleteButton.title="Delete series";
+    deleteButton.setAttribute("aria-label",`Delete ${folder.name}`);
+    deleteButton.textContent="×";
+    deleteButton.addEventListener("click",()=>window.deleteSeriesFolder(folder.id));
+    actions.appendChild(deleteButton);
+  });
+};
+renderSeriesFolders();
+
 startCloudSync();

@@ -1,0 +1,76 @@
+name: Switch cloud sync transport
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/use-safari-sync-transport.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch cloud sync transport
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('cloud-sync.js')
+          text = path.read_text(encoding='utf-8')
+
+          replacement = '''async function cloudPost(path, payload){
+  const token=localStorage.getItem(SYNC_TOKEN_KEY);
+  if(!token) throw new Error("NO_TOKEN");
+  let res;
+  try{
+    res=await fetch(CLOUD_API+path,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=UTF-8"},
+      body:JSON.stringify({token,...payload}),
+      cache:"no-store"
+    });
+  }catch(err){
+    throw new Error("NETWORK");
+  }
+  if(res.status===401) throw new Error("UNAUTHORIZED");
+  if(!res.ok) throw new Error("HTTP_"+res.status);
+  return res.json();
+}
+
+async function cloudRead(){
+  return cloudPost("/state/read",{});
+}
+
+async function cloudWrite(state){
+  return cloudPost("/state/write",{state});
+}
+'''
+
+          text, count = re.subn(
+              r'async function cloudRequest\(method, body\)\{.*?\n\}\n\nlet localDirty=',
+              replacement + '\nlet localDirty=',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          if count != 1:
+              raise SystemExit('Could not find cloudRequest block')
+
+          text = text.replace('await cloudRequest("PUT",state);', 'await cloudWrite(state);')
+          text = text.replace('normalizedState(await cloudRequest("GET"))', 'normalizedState(await cloudRead())')
+
+          path.write_text(text, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cloud-sync.js
+          git commit -m "Use Safari-friendly cloud sync transport" || exit 0
+          git push

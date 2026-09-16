@@ -1,0 +1,1860 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#d98295">
+<title>my year in books</title>
+<style>
+:root{
+  --bg:#fff7f8; --card:#ffffff;
+  --pink-a:#f4b8c4; --pink-b:#d98295; --pink-e:#fadadd; --pink-f:#a95c78;
+  --black:#111111; --soft-black:#2a2426; --muted:#756a6f;
+  --gold:#c7a34a; --shadow:0 10px 28px rgba(169,92,120,.14); --radius:24px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0; min-height:100vh; color:var(--soft-black);
+  font-family:"Trebuchet MS","Avenir Next","Segoe UI",sans-serif;
+  background:
+    radial-gradient(circle at top right, rgba(244,184,196,.38), transparent 30%),
+    radial-gradient(circle at bottom left, rgba(250,218,221,.75), transparent 34%),
+    linear-gradient(180deg,#fffdfd 0%,var(--bg) 100%);
+}
+.shell{width:min(760px,100%);margin:0 auto;padding:calc(18px + env(safe-area-inset-top)) 18px calc(30px + env(safe-area-inset-bottom))}
+.topline{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:12px}
+.eyebrow{color:var(--pink-f);font-size:.78rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;margin-bottom:4px}
+h1,.script{font-family:"Noteworthy","Segoe Print","Bradley Hand",cursive;font-weight:400}
+h1{margin:0;color:var(--pink-f);font-size:clamp(2.7rem,10vw,4.4rem);line-height:.9}
+.subtitle{margin:8px 0 0;color:var(--muted);font-size:.9rem}
+.count{flex:none;background:linear-gradient(180deg,#fff,#fff7f9);color:var(--black);border-radius:999px;padding:10px 14px;font-size:.9rem;font-weight:900;border:1.5px solid var(--black);box-shadow:0 8px 18px rgba(17,17,17,.08)}
+.year-strip{display:flex;gap:8px;overflow-x:auto;padding:8px 1px 13px;scrollbar-width:none}
+.year-strip::-webkit-scrollbar{display:none}
+button{font:inherit;cursor:pointer}
+.year-btn{flex:none;padding:10px 15px;border-radius:999px;background:#fff;color:var(--black);border:1.5px solid var(--black);font-weight:900;box-shadow:0 4px 12px rgba(17,17,17,.05)}
+.year-btn.active{background:linear-gradient(135deg,var(--pink-b),var(--pink-f));color:#fff}
+.card{background:rgba(255,255,255,.95);border:1.5px solid var(--black);border-radius:var(--radius);box-shadow:var(--shadow)}
+.form-card{position:relative;padding:20px;margin-bottom:20px;overflow:hidden}
+.form-card::after{content:"♡";position:absolute;right:14px;top:4px;font-size:2.4rem;color:var(--pink-a);transform:rotate(8deg);pointer-events:none}
+.form-title{margin:0 0 16px;color:var(--black);font-size:2rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field{display:flex;flex-direction:column;gap:7px}.field.full{grid-column:1/-1}
+label{font-size:.8rem;font-weight:900;color:var(--soft-black);letter-spacing:.02em}
+input,select{width:100%;border:1.5px solid var(--black);border-radius:16px;background:#fffafb;color:var(--black);padding:13px 14px;font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--pink-f);box-shadow:0 0 0 4px rgba(217,130,149,.18)}
+
+.star-rating{
+  display:flex;
+  gap:5px;
+  align-items:center;
+  height:48px;
+  width:max-content;
+  max-width:100%;
+}
+.star-wrap{
+  position:relative;
+  width:40px;
+  height:46px;
+  flex:0 0 40px;
+}
+.star-visual{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:2.25rem;
+  line-height:1;
+  color:#ead8de;
+  user-select:none;
+}
+.star-wrap.full .star-visual{
+  color:var(--gold);
+}
+.star-wrap.half .star-visual{
+  color:transparent;
+  background:linear-gradient(90deg,var(--gold) 0 50%,#ead8de 50% 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+}
+.star-hit{
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:50%;
+  padding:0;
+  margin:0;
+  border:0;
+  background:transparent;
+  z-index:2;
+}
+.left-hit{left:0}
+.right-hit{right:0}
+.star-wrap:hover .star-visual{
+  filter:brightness(.95);
+}
+.rating-label{
+  margin-top:2px;
+  color:var(--muted);
+  font-size:.78rem;
+  font-weight:800;
+}
+.actions{display:flex;gap:10px;margin-top:15px}
+.primary,.secondary,.icon-btn{border-radius:15px;font-weight:900}
+.primary{flex:1;background:linear-gradient(135deg,var(--pink-b),var(--pink-f));color:#fff;padding:13px 15px;border:1.5px solid var(--black)}
+.secondary{padding:13px 15px;background:var(--pink-e);color:var(--black);border:1.5px solid var(--black)}
+.section-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 2px 10px}
+.section-row h2{margin:0;color:var(--black);font-size:2rem}
+.hint{color:var(--muted);font-size:.8rem;text-align:right}
+.books{display:grid;gap:11px}
+.book{position:relative;padding:15px;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;overflow:hidden}
+.book::before{content:"";position:absolute;inset:0 auto 0 0;width:7px;background:linear-gradient(var(--pink-a),var(--pink-f))}
+.book-title{margin:0 0 4px 7px;font-weight:950;font-size:1rem;color:var(--black)}
+.book-meta{margin-left:7px;color:var(--muted);font-size:.86rem;line-height:1.45}
+.stars{color:var(--gold);font-weight:950}
+.book-actions{display:flex;gap:6px}
+.icon-btn{min-width:42px;padding:9px 10px;background:#fff1f4;color:var(--black);border:1.5px solid var(--black)}
+.empty{text-align:center;padding:30px 18px;color:var(--muted);background:linear-gradient(180deg,#fff,#fff8fa)}
+.empty strong{display:block;color:var(--black);margin-bottom:5px;font-size:1.8rem}
+footer{text-align:center;color:var(--muted);font-size:.75rem;margin-top:18px}
+
+.search-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:14px}
+.search-row .field{flex:1}
+.search-btn{padding:13px 15px;border-radius:15px;border:1.5px solid var(--black);background:var(--pink-e);font-weight:900;color:var(--black)}
+.search-results{display:grid;gap:8px;margin:8px 0 15px}
+.search-result{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;padding:8px;border:1px solid #e7d6dc;border-radius:14px;background:#fff}
+.search-result img{width:48px;height:68px;object-fit:cover;border-radius:8px;border:1px solid #ddd;background:#f6f1f2}
+.search-result button{padding:8px 10px;border:1.5px solid var(--black);border-radius:12px;background:#fff;font-weight:900}
+.cover-wrap{display:flex;gap:12px;align-items:flex-start}
+.cover-preview{width:92px;height:132px;object-fit:cover;border-radius:12px;border:1.5px solid var(--black);background:#f6f1f2}
+.cover-placeholder{display:flex;align-items:center;justify-content:center;text-align:center;color:var(--muted);font-size:.75rem;padding:8px}
+.checkbox-row{display:flex;align-items:center;gap:9px;min-height:46px}
+.checkbox-row input{width:auto;transform:scale(1.15)}
+textarea{width:100%;min-height:110px;border:1.5px solid var(--black);border-radius:16px;background:#fffafb;color:var(--black);padding:13px 14px;font:inherit;outline:none;resize:vertical}
+textarea:focus{border-color:var(--pink-f);box-shadow:0 0 0 4px rgba(217,130,149,.18)}
+.book-list-cover{width:54px;height:76px;object-fit:cover;border-radius:9px;border:1px solid #ddd;background:#f6f1f2}
+.book.with-cover{grid-template-columns:54px 1fr auto}
+.book.with-cover .book-title,.book.with-cover .book-meta{margin-left:0}
+
+
+.hidden-field{display:none!important}
+.series-options{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.series-choice{
+  position:relative;
+}
+.series-choice input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+.series-choice label{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:11px 12px;
+  border:1.5px solid var(--black);
+  border-radius:14px;
+  background:#fffafb;
+  cursor:pointer;
+  font-weight:900;
+}
+.series-choice label::before{
+  content:"";
+  width:16px;
+  height:16px;
+  border:1.5px solid var(--black);
+  border-radius:4px;
+  background:white;
+  flex:0 0 16px;
+}
+.series-choice input:checked + label{
+  background:var(--pink-e);
+}
+.series-choice input:checked + label::before{
+  background:linear-gradient(135deg,var(--pink-b),var(--pink-f));
+  box-shadow:inset 0 0 0 3px white;
+}
+.duration-box{
+  padding:12px 14px;
+  border:1.5px solid var(--black);
+  border-radius:16px;
+  background:linear-gradient(135deg,#fffafb,var(--pink-e));
+  color:var(--black);
+  font-weight:900;
+}
+@media(max-width:560px){
+  .series-options{grid-template-columns:1fr}
+}
+
+@media(max-width:560px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+
+.app-tabs{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:7px;
+  margin:2px 0 16px;
+}
+.app-tab{
+  border:1.5px solid var(--black);
+  border-radius:14px;
+  background:#fff;
+  color:var(--black);
+  padding:10px 8px;
+  font-weight:900;
+  font-size:.82rem;
+}
+.app-tab.active{
+  background:linear-gradient(135deg,var(--pink-b),var(--pink-f));
+  color:#fff;
+}
+.page{display:none}
+.page.active{display:block}
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-bottom:16px;
+}
+.stat-card{
+  background:linear-gradient(180deg,#fff,#fff8fa);
+  border:1.5px solid var(--black);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:var(--shadow);
+}
+.stat-value{
+  font-size:1.55rem;
+  font-weight:950;
+  color:var(--pink-f);
+  line-height:1;
+  margin-bottom:6px;
+}
+.stat-label{
+  font-size:.78rem;
+  font-weight:900;
+  color:var(--black);
+}
+.breakdown-card{
+  margin-top:12px;
+  padding:16px;
+}
+.breakdown-title{
+  margin:0 0 12px;
+  font-size:1.65rem;
+  color:var(--black);
+}
+.breakdown-list{
+  display:grid;
+  gap:8px;
+}
+.breakdown-row{
+  display:grid;
+  grid-template-columns:minmax(110px,1fr) 2fr auto;
+  gap:10px;
+  align-items:center;
+}
+.breakdown-name{
+  font-weight:900;
+  color:var(--black);
+}
+.bar-track{
+  height:10px;
+  border:1px solid var(--black);
+  border-radius:999px;
+  overflow:hidden;
+  background:#fff;
+}
+.bar-fill{
+  height:100%;
+  background:linear-gradient(90deg,var(--pink-a),var(--pink-f));
+}
+.breakdown-count{
+  font-weight:900;
+  color:var(--black);
+  min-width:22px;
+  text-align:right;
+}
+.month-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.month-card{
+  border:1.5px solid var(--black);
+  border-radius:20px;
+  background:linear-gradient(180deg,#fff,#fff8fa);
+  padding:15px;
+  box-shadow:var(--shadow);
+}
+.month-title{
+  font-family:"Brush Script MT","Segoe Script","Snell Roundhand",cursive;
+  font-size:1.65rem;
+  font-weight:600;
+  color:var(--pink-f);
+  margin-bottom:10px;
+}
+.month-metrics{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+}
+.month-metric{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:9px;
+}
+.month-metric strong{
+  display:block;
+  font-size:1rem;
+  color:var(--black);
+}
+.month-metric span{
+  display:block;
+  font-size:.72rem;
+  color:var(--muted);
+  margin-top:2px;
+}
+.month-books{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.4;
+}
+.sidequest-intro{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:.9rem;
+}
+.page-heading{
+  margin:0 0 12px;
+  color:var(--black);
+  font-size:2rem;
+}
+.no-data{
+  padding:20px;
+  text-align:center;
+  color:var(--muted);
+}
+@media(max-width:560px){
+  .stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .month-grid{grid-template-columns:1fr}
+  .app-tab{font-size:.72rem;padding:9px 5px}
+}
+
+
+.search-results{
+  max-height:420px;
+  overflow-y:auto;
+  padding-right:2px;
+}
+.load-more-wrap{
+  display:flex;
+  justify-content:center;
+  margin:10px 0 2px;
+}
+.load-more-btn{
+  padding:10px 14px;
+  border:1.5px solid var(--black);
+  border-radius:14px;
+  background:var(--pink-e);
+  color:var(--black);
+  font-weight:900;
+}
+
+
+.visual-section{
+  margin-top:14px;
+  padding:16px;
+}
+.visual-title{
+  margin:0 0 4px;
+  font-size:1.65rem;
+  color:var(--black);
+}
+.visual-subtitle{
+  margin:0 0 14px;
+  font-size:.8rem;
+  color:var(--muted);
+}
+.chart-box{
+  width:100%;
+  overflow-x:auto;
+}
+.chart-svg{
+  width:100%;
+  min-width:520px;
+  height:auto;
+  display:block;
+}
+.chart-axis{
+  stroke:#111;
+  stroke-width:1.3;
+}
+.chart-grid{
+  stroke:#ead8de;
+  stroke-width:1;
+}
+.chart-bar{
+  fill:var(--pink-b);
+  stroke:#111;
+  stroke-width:1.2;
+}
+.chart-line{
+  fill:none;
+  stroke:var(--pink-f);
+  stroke-width:3;
+}
+.chart-point{
+  fill:var(--pink-a);
+  stroke:#111;
+  stroke-width:1.4;
+}
+.chart-label{
+  font-family:"Trebuchet MS","Avenir Next","Segoe UI",sans-serif;
+  font-size:11px;
+  fill:#2a2426;
+}
+.chart-value{
+  font-family:"Trebuchet MS","Avenir Next","Segoe UI",sans-serif;
+  font-size:10px;
+  fill:#756a6f;
+}
+.pie-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.pie-card{
+  display:grid;
+  grid-template-columns:150px 1fr;
+  gap:14px;
+  align-items:center;
+  padding:14px;
+  border:1.5px solid var(--black);
+  border-radius:18px;
+  background:linear-gradient(180deg,#fff,#fff8fa);
+}
+.pie-svg{
+  width:150px;
+  height:150px;
+}
+.pie-legend{
+  display:grid;
+  gap:7px;
+  font-size:.8rem;
+}
+.legend-row{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.legend-dot{
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  border:1px solid #111;
+  flex:0 0 11px;
+}
+.chart-note{
+  color:var(--muted);
+  font-size:.75rem;
+  margin-top:8px;
+}
+@media(max-width:620px){
+  .pie-grid{grid-template-columns:1fr}
+  .pie-card{grid-template-columns:125px 1fr}
+  .pie-svg{width:125px;height:125px}
+}
+
+
+.notes-grid{
+  display:grid;
+  gap:12px;
+}
+.note-card{
+  display:grid;
+  grid-template-columns:64px 1fr auto;
+  gap:12px;
+  align-items:start;
+  padding:14px;
+}
+.note-cover{
+  width:64px;
+  height:92px;
+  object-fit:cover;
+  border-radius:10px;
+  border:1.5px solid var(--black);
+  background:#f6f1f2;
+}
+.note-title{
+  margin:0 0 3px;
+  font-weight:950;
+  color:var(--black);
+}
+.note-meta{
+  font-size:.78rem;
+  color:var(--muted);
+  margin-bottom:8px;
+}
+.note-text{
+  white-space:pre-wrap;
+  line-height:1.45;
+  color:var(--soft-black);
+}
+.note-empty{
+  color:var(--muted);
+  font-style:italic;
+}
+.note-actions{
+  display:flex;
+  gap:6px;
+}
+@media(max-width:560px){
+  .app-tabs{grid-template-columns:repeat(3,1fr)}
+  .note-card{grid-template-columns:52px 1fr}
+  .note-cover{width:52px;height:76px}
+  .note-actions{grid-column:2}
+}
+
+
+.notes-subtabs{
+  display:flex;
+  gap:8px;
+  margin:0 0 14px;
+}
+.notes-subtab{
+  padding:9px 13px;
+  border:1.5px solid var(--black);
+  border-radius:999px;
+  background:#fff;
+  color:var(--black);
+  font-weight:900;
+}
+.notes-subtab.active{
+  background:linear-gradient(135deg,var(--pink-b),var(--pink-f));
+  color:#fff;
+}
+.notes-panel{display:none}
+.notes-panel.active{display:block}
+.series-note-form{
+  padding:16px;
+  margin-bottom:14px;
+}
+.series-note-card{
+  padding:15px;
+  display:grid;
+  gap:10px;
+}
+.series-note-header{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+}
+.series-note-title{
+  font-size:1.15rem;
+  font-weight:950;
+  color:var(--black);
+}
+.series-note-related{
+  color:var(--muted);
+  font-size:.78rem;
+  margin-top:2px;
+}
+.series-note-text{
+  white-space:pre-wrap;
+  line-height:1.5;
+}
+.series-note-actions{
+  display:flex;
+  gap:6px;
+}
+
+
+.series-folder-card{
+  padding:15px;
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:center;
+}
+.series-folder-main{
+  min-width:0;
+  flex:1;
+}
+.series-folder-title{
+  font-size:1.15rem;
+  font-weight:950;
+  color:var(--black);
+}
+.series-folder-meta{
+  color:var(--muted);
+  font-size:.8rem;
+  margin-top:3px;
+}
+.series-folder-open{
+  padding:9px 12px;
+  border:1.5px solid var(--black);
+  border-radius:13px;
+  background:var(--pink-e);
+  color:var(--black);
+  font-weight:900;
+}
+.series-entry-card{
+  padding:14px;
+}
+.series-entry-book{
+  font-weight:950;
+  color:var(--pink-f);
+  margin-bottom:7px;
+}
+.series-entry-text{
+  white-space:pre-wrap;
+  line-height:1.5;
+}
+
+
+.title-lowercase,h1,.page-heading,.form-title,.script{text-transform:lowercase;}
+h1,.page-heading,.form-title{font-weight:400;}
+
+/* v2.6 mobile header fix */
+@media (max-width: 600px){
+  header{
+    position:relative;
+    padding-top:18px;
+    padding-right:92px;
+    min-height:86px;
+    overflow:visible;
+  }
+
+  header h1{
+    margin:0;
+    max-width:none;
+    width:100%;
+    white-space:normal;
+    overflow:visible;
+    text-overflow:clip;
+    line-height:1.02;
+    font-size:clamp(2rem, 11vw, 3rem);
+    word-break:normal;
+  }
+
+  /* Keep the book-count badge tucked into the upper-right corner,
+     clear of the title instead of sitting lower and overlapping it. */
+  #bookCount,
+  .book-count,
+  .count-badge,
+  header .badge{
+    position:absolute;
+    top:14px;
+    right:14px;
+    margin:0;
+    z-index:2;
+    max-width:78px;
+    text-align:center;
+    line-height:1.15;
+  }
+
+  header .subtitle,
+  header .eyebrow{
+    margin-right:0;
+  }
+}
+
+</style>
+</head>
+<body>
+<main class="shell">
+  <header class="topline">
+    <div>
+      <div class="eyebrow">Book tracker ♡</div>
+      <h1>my year in books</h1>
+      <p class="subtitle">Soft pink palette with black framing and cute headings.</p>
+    </div>
+    <div class="count" id="bookCount">0 books</div>
+  </header>
+
+  <div class="year-strip" id="yearStrip"></div>
+
+  <nav class="app-tabs" aria-label="App sections">
+    <button class="app-tab active" type="button" data-page="booksPage">Books</button>
+    <button class="app-tab" type="button" data-page="statsPage">Stats</button>
+    <button class="app-tab" type="button" data-page="monthsPage">Months</button>
+    <button class="app-tab" type="button" data-page="notesPage">Notes</button>
+    <button class="app-tab" type="button" data-page="sideQuestPage">Side Quest Reads</button>
+  </nav>
+
+  <section class="page active" id="booksPage">
+
+  <section class="card form-card">
+    <h2 class="form-title script" id="formHeading">New Read</h2>
+    <form id="bookForm">
+      <div class="search-row">
+        <div class="field">
+          <label for="searchQuery">Find book details & cover</label>
+          <input id="searchQuery" autocomplete="off" placeholder="Optional: title, author, or ISBN">
+        </div>
+        <button class="search-btn" type="button" id="searchBtn">Search</button>
+      </div>
+      <div class="hint" style="margin:-6px 0 10px">Tip: fill in Title and Author before searching for a much narrower match.</div>
+      <div class="search-results" id="searchResults"></div>
+
+      <div class="grid">
+        <div class="field full"><label for="title">Title</label><input id="title" required placeholder="e.g. The Night Circus"></div>
+        <div class="field"><label for="author">Author</label><input id="author" required placeholder="Author name"></div>
+        <div class="field"><label for="publicationYear">Publication year</label><input id="publicationYear" type="number" inputmode="numeric" placeholder="2011"></div>
+
+        <div class="field"><label for="pages">Pages</label><input id="pages" type="number" min="1" step="1" placeholder="320"></div>
+
+        <div class="field">
+          <label>Rating</label>
+          <div class="star-rating" id="starRating" aria-label="Rating from half a star to five stars">
+            <div class="star-wrap"><span class="star-visual">★</span><button type="button" class="star-hit left-hit" data-rating="0.5"></button><button type="button" class="star-hit right-hit" data-rating="1"></button></div>
+            <div class="star-wrap"><span class="star-visual">★</span><button type="button" class="star-hit left-hit" data-rating="1.5"></button><button type="button" class="star-hit right-hit" data-rating="2"></button></div>
+            <div class="star-wrap"><span class="star-visual">★</span><button type="button" class="star-hit left-hit" data-rating="2.5"></button><button type="button" class="star-hit right-hit" data-rating="3"></button></div>
+            <div class="star-wrap"><span class="star-visual">★</span><button type="button" class="star-hit left-hit" data-rating="3.5"></button><button type="button" class="star-hit right-hit" data-rating="4"></button></div>
+            <div class="star-wrap"><span class="star-visual">★</span><button type="button" class="star-hit left-hit" data-rating="4.5"></button><button type="button" class="star-hit right-hit" data-rating="5"></button></div>
+          </div>
+          <input id="rating" type="hidden">
+          <div class="rating-label" id="ratingLabel">Tap the left or right half of a star</div>
+        </div>
+
+        <div class="field"><label for="year">Reading year</label><input id="year" type="number" inputmode="numeric" min="1900" max="9999" required placeholder="2026"></div>
+        <div class="field"><label for="genre">Genre</label><input id="genre" list="genreList" placeholder="Science Fiction"><datalist id="genreList"><option>Fantasy</option><option>Romance</option><option>Science Fiction</option><option>Mystery</option><option>Thriller</option><option>Horror</option><option>Historical Fiction</option><option>Contemporary</option><option>Nonfiction</option><option>Biography</option><option>Memoir</option></datalist></div>
+
+        <div class="field"><label for="subgenre">Subgenre</label><input id="subgenre" list="subgenreList" placeholder="Urban fantasy, supernatural, vampires"><datalist id="subgenreList"><option>Urban Fantasy</option><option>Supernatural</option><option>Vampires</option><option>Space Opera</option><option>Dystopian</option><option>Cozy Mystery</option><option>Dark Romance</option><option>Romantic Fantasy</option></datalist></div>
+
+        <div class="field full"><label for="tags">Tags</label><input id="tags" placeholder="enemies to lovers, marriage of convenience, love triangle"></div>
+
+        <div class="field"><label for="format">Format</label><select id="format"><option value="">Choose format</option><option>Physical</option><option>E-book</option><option>Audiobook</option></select></div>
+        <div class="field hidden-field" id="audioLengthField"><label for="audioLength">Audiobook length</label><input id="audioLength" placeholder="e.g. 12h 35m"></div>
+
+        <div class="field"><label for="bookType">Book type</label><input id="bookType" list="typeList" value="Novel" placeholder="Novel"><datalist id="typeList"><option>Novel</option><option>Novella</option><option>Short Story</option><option>Comic Book</option><option>Graphic Novel</option><option>Manga</option><option>Poetry</option><option>Essay Collection</option></datalist></div>
+        <div class="field checkbox-row"><input id="reread" type="checkbox"><label for="reread">Reread</label></div>
+
+        <div class="field full">
+          <label>Series status</label>
+          <div class="series-options">
+            <div class="series-choice"><input type="radio" name="seriesStatus" id="seriesStandalone" value="Standalone"><label for="seriesStandalone">Standalone</label></div>
+            <div class="series-choice"><input type="radio" name="seriesStatus" id="seriesStart" value="Starting a series"><label for="seriesStart">Starting a series</label></div>
+            <div class="series-choice"><input type="radio" name="seriesStatus" id="seriesContinue" value="Continuing a series"><label for="seriesContinue">Continuing a series</label></div>
+            <div class="series-choice"><input type="radio" name="seriesStatus" id="seriesFinish" value="Finishing a series"><label for="seriesFinish">Finishing a series</label></div>
+          </div>
+        </div>
+
+        <div class="field"><label for="dateStarted">Date started</label><input id="dateStarted" type="date"></div>
+        <div class="field"><label for="dateFinished">Date finished</label><input id="dateFinished" type="date"></div>
+        <div class="field full hidden-field" id="durationField">
+          <label>Reading time</label>
+          <div class="duration-box" id="durationValue"></div>
+        </div>
+
+        <div class="field full">
+          <label>Cover</label>
+          <div class="cover-wrap">
+            <img id="coverPreview" class="cover-preview" alt="Book cover preview">
+            <div class="field" style="flex:1">
+              <label for="coverUrl">Cover image URL</label>
+              <input id="coverUrl" placeholder="Filled automatically when found">
+            </div>
+          </div>
+        </div>
+
+        <div class="field full"><label for="notes">Notes</label><textarea id="notes" placeholder="Anything you want to remember about this book..."></textarea></div>
+        <div class="field full checkbox-row"><input id="excludeStats" type="checkbox"><label for="excludeStats">Exclude this book from stats</label></div>
+      </div>
+
+      <div class="actions">
+        <button class="primary" type="submit" id="saveBtn">Save book</button>
+        <button class="secondary" type="button" id="cancelBtn" hidden>Cancel</button>
+      </div>
+    </form>
+  </section>
+
+  <div class="section-row">
+    <h2 class="script" id="yearHeading">Your books</h2>
+    <div class="hint">Saved on this device for now</div>
+  </div>
+  <section class="books" id="bookList"></section>
+  </section>
+
+  <section class="page" id="statsPage">
+    <h2 class="page-heading script" id="statsHeading">year overview ♡</h2>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="pie-grid" id="statsPieGrid"></div>
+    <div id="statsBreakdowns"></div>
+  </section>
+
+  <section class="page" id="monthsPage">
+    <h2 class="page-heading script" id="monthsHeading">by month ♡</h2>
+    <section class="card visual-section">
+      <h3 class="visual-title script">Books Finished</h3>
+      <p class="visual-subtitle">January to December at a glance.</p>
+      <div class="chart-box" id="monthlyBooksChart"></div>
+    </section>
+
+    <section class="card visual-section">
+      <h3 class="visual-title script">Pages by Month</h3>
+      <p class="visual-subtitle">Total pages assigned to the month each book was finished.</p>
+      <div class="chart-box" id="monthlyPagesChart"></div>
+    </section>
+
+    <section class="card visual-section">
+      <h3 class="visual-title script">Average Rating</h3>
+      <p class="visual-subtitle">How your average rating changed through the year.</p>
+      <div class="chart-box" id="monthlyRatingChart"></div>
+    </section>
+
+    <div class="month-grid" id="monthGrid"></div>
+  </section>
+
+  <section class="page" id="notesPage">
+    <h2 class="page-heading script" id="notesHeading">reading notes ♡</h2>
+
+    <div class="notes-subtabs">
+      <button type="button" class="notes-subtab active" data-notes-panel="bookNotesPanel">book notes</button>
+      <button type="button" class="notes-subtab" data-notes-panel="seriesNotesPanel">series notes</button>
+    </div>
+
+    <section class="notes-panel active" id="bookNotesPanel">
+      <p class="sidequest-intro">All notes from your counted books for the selected year.</p>
+      <section class="notes-grid" id="notesList"></section>
+    </section>
+
+    <section class="notes-panel" id="seriesNotesPanel">
+      <p class="sidequest-intro">Create a folder for each series, then keep all your continuity notes together.</p>
+
+      <div class="actions" style="margin:0 0 14px">
+        <button type="button" class="primary" id="addSeriesBtn">＋ Add Series</button>
+      </div>
+
+      <section class="card series-note-form hidden-field" id="seriesFolderForm">
+        <h3 class="form-title script" id="seriesFolderFormHeading">new series</h3>
+        <div class="grid">
+          <div class="field full">
+            <label for="seriesFolderName">Series name</label>
+            <input id="seriesFolderName" placeholder="e.g. The Last Hours">
+          </div>
+          <div class="field full">
+            <label for="seriesFolderAuthor">Author</label>
+            <input id="seriesFolderAuthor" placeholder="e.g. Cassandra Clare">
+          </div>
+        </div>
+        <div class="actions">
+          <button type="button" class="primary" id="saveSeriesFolderBtn">Create series</button>
+          <button type="button" class="secondary" id="cancelSeriesFolderBtn">Cancel</button>
+        </div>
+      </section>
+
+      <section id="seriesFolderList" class="notes-grid"></section>
+
+      <section id="seriesFolderDetail" class="hidden-field">
+        <div class="actions" style="margin:0 0 12px">
+          <button type="button" class="secondary" id="backToSeriesBtn">← All Series</button>
+          <button type="button" class="primary" id="addSeriesEntryBtn">＋ Add Note</button>
+        </div>
+
+        <section class="card series-note-form">
+          <h3 class="form-title script" id="seriesDetailHeading"></h3>
+          <div class="note-meta" id="seriesDetailAuthor"></div>
+        </section>
+
+        <section class="card series-note-form hidden-field" id="seriesEntryForm">
+          <h3 class="form-title script" id="seriesEntryFormHeading">new note</h3>
+          <div class="grid">
+            <div class="field full">
+              <label for="seriesEntryBook">Which book?</label>
+              <input id="seriesEntryBook" placeholder="e.g. Chain of Iron">
+            </div>
+            <div class="field full">
+              <label for="seriesEntryText">Note</label>
+              <textarea id="seriesEntryText" placeholder="Characters, plot points, theories, reminders..."></textarea>
+            </div>
+          </div>
+          <div class="actions">
+            <button type="button" class="primary" id="saveSeriesEntryBtn">Save note</button>
+            <button type="button" class="secondary" id="cancelSeriesEntryBtn">Cancel</button>
+          </div>
+        </section>
+
+        <section id="seriesEntryList" class="notes-grid"></section>
+      </section>
+    </section>
+  </section>
+
+  <section class="page" id="sideQuestPage">
+    <h2 class="page-heading script" id="sideQuestHeading">side quest reads ♡</h2>
+    <p class="sidequest-intro">Reads you chose to keep outside your main yearly stats.</p>
+    <section class="books" id="sideQuestList"></section>
+  </section>
+
+  <footer>leandra ♡ · pilot v2.6</footer>
+</main>
+
+<script>
+const KEY="readingYearBooks_v3";
+let books=JSON.parse(localStorage.getItem(KEY)||"[]");
+const SERIES_FOLDERS_KEY="readingTrackerSeriesFolders_v1";
+let seriesFolders=JSON.parse(localStorage.getItem(SERIES_FOLDERS_KEY)||"[]");
+let activeSeriesFolderId=null;
+let editingSeriesFolderId=null;
+let editingSeriesEntryId=null;
+if(!books.length){
+  const old=JSON.parse(localStorage.getItem("readingYearBooks_v2")||"[]");
+  if(old.length) books=old.map(b=>({...b,publicationYear:"",genre:"",tags:"",format:"",audioLength:"",bookType:"",reread:false,dateStarted:"",dateFinished:"",coverUrl:"",notes:"",excludeStats:false}));
+}
+let editingId=null;
+let selectedYear=new Date().getFullYear();
+let currentSearchQuery="";
+let currentSearchPage=1;
+let accumulatedSearchDocs=[];
+
+const $=id=>document.getElementById(id);
+const fields=["title","author","publicationYear","pages","rating","year","genre","subgenre","tags","format","audioLength","bookType","dateStarted","dateFinished","coverUrl","notes"];
+const titleInput=$("title"),authorInput=$("author"),pagesInput=$("pages"),ratingInput=$("rating"),ratingLabel=$("ratingLabel"),
+starRating=$("starRating"),yearInput=$("year"),list=$("bookList"),count=$("bookCount"),cancelBtn=$("cancelBtn"),
+saveBtn=$("saveBtn"),formHeading=$("formHeading"),yearStrip=$("yearStrip"),yearHeading=$("yearHeading"),
+coverPreview=$("coverPreview"),searchResults=$("searchResults"),
+statsGrid=$("statsGrid"),statsPieGrid=$("statsPieGrid"),statsBreakdowns=$("statsBreakdowns"),monthGrid=$("monthGrid"),notesList=$("notesList"),seriesFolderList=$("seriesFolderList"),seriesFolderDetail=$("seriesFolderDetail"),seriesEntryList=$("seriesEntryList"),sideQuestList=$("sideQuestList"),monthlyBooksChart=$("monthlyBooksChart"),monthlyPagesChart=$("monthlyPagesChart"),monthlyRatingChart=$("monthlyRatingChart");
+
+function getYears(){
+  const now=new Date().getFullYear();
+  return [...new Set([now,...books.map(b=>Number(b.year)).filter(y=>y>=2026)])].sort((a,b)=>b-a);
+}
+function buildYearControls(){
+  const ys=getYears();
+  if(!ys.includes(+selectedYear)) selectedYear=ys[0];
+  if(!editingId && !yearInput.value) yearInput.value=selectedYear;
+  yearStrip.innerHTML=ys.map(y=>`<button type="button" class="year-btn ${y===+selectedYear?"active":""}" onclick="selectYear(${y})">${y}</button>`).join("");
+}
+
+window.selectYear=y=>{
+  selectedYear=+y;
+  if(!editingId)yearInput.value=y;
+  render();
+}
+
+document.querySelectorAll(".app-tab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".app-tab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    $(btn.dataset.page).classList.add("active");
+  });
+});
+
+document.querySelectorAll(".notes-subtab").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".notes-subtab").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".notes-panel").forEach(p=>p.classList.remove("active"));
+    btn.classList.add("active");
+    $(btn.dataset.notesPanel).classList.add("active");
+  });
+});
+
+
+function persist(){localStorage.setItem(KEY,JSON.stringify(books))}
+function esc(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function starText(v){const n=Number(v)||0;return n?`${n%1?n.toFixed(1):n.toFixed(0)} ★`:"Unrated"}
+
+function setRating(value){
+  const n=Number(value)||0;
+  ratingInput.value=n?String(n):"";
+  ratingLabel.textContent=n?`${n%1?n.toFixed(1):n.toFixed(0)} stars`:"Tap the left or right half of a star";
+  [...starRating.querySelectorAll(".star-wrap")].forEach((wrap,index)=>{
+    const s=index+1;wrap.classList.remove("full","half");
+    if(n>=s)wrap.classList.add("full");else if(n>=s-.5)wrap.classList.add("half");
+  });
+}
+starRating.addEventListener("click",e=>{const btn=e.target.closest(".star-hit");if(btn)setRating(btn.dataset.rating)});
+
+function updateCoverPreview(){
+  const url=$("coverUrl").value.trim();
+  coverPreview.src=url||"";
+  coverPreview.style.visibility=url?"visible":"hidden";
+}
+$("coverUrl").addEventListener("input",updateCoverPreview);
+
+$("format").addEventListener("change",updateConditionalFields);
+$("dateStarted").addEventListener("change",updateReadingDuration);
+$("dateFinished").addEventListener("change",updateReadingDuration);
+
+function updateConditionalFields(){
+  const isAudio=$("format").value==="Audiobook";
+  $("audioLengthField").classList.toggle("hidden-field",!isAudio);
+  if(!isAudio)$("audioLength").value="";
+}
+
+function updateReadingDuration(){
+  const start=$("dateStarted").value;
+  const finish=$("dateFinished").value;
+  const box=$("durationField");
+  if(!start||!finish){
+    box.classList.add("hidden-field");
+    $("durationValue").textContent="";
+    return;
+  }
+  const a=new Date(start+"T00:00:00");
+  const b=new Date(finish+"T00:00:00");
+  if(isNaN(a)||isNaN(b)||b<a){
+    box.classList.add("hidden-field");
+    $("durationValue").textContent="";
+    return;
+  }
+  const days=Math.floor((b-a)/86400000)+1;
+  $("durationValue").textContent=`${days} day${days===1?"":"s"}`;
+  box.classList.remove("hidden-field");
+}
+
+
+$("searchBtn").addEventListener("click",searchBooks);
+$("searchQuery").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();searchBooks()}});
+
+
+async function cacheCoverAsDataUrl(url){
+  if(!url)return "";
+  try{
+    const response=await fetch(url,{mode:"cors"});
+    if(!response.ok)return "";
+    const blob=await response.blob();
+    return await new Promise(resolve=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result||"");
+      reader.onerror=()=>resolve("");
+      reader.readAsDataURL(blob);
+    });
+  }catch(e){
+    return "";
+  }
+}
+
+async function searchBooks(loadMore=false){
+  const freeQuery=$("searchQuery").value.trim();
+  const titleQuery=$("title").value.trim();
+  const authorQuery=$("author").value.trim();
+
+  let params=new URLSearchParams();
+  let searchIdentity="";
+
+  if(titleQuery || authorQuery){
+    if(titleQuery) params.set("title", titleQuery);
+    if(authorQuery) params.set("author", authorQuery);
+    if(freeQuery) params.set("q", freeQuery);
+    searchIdentity=`title:${titleQuery}|author:${authorQuery}|q:${freeQuery}`;
+  } else if(freeQuery) {
+    params.set("q", freeQuery);
+    searchIdentity=`q:${freeQuery}`;
+  } else {
+    searchResults.innerHTML='<div class="hint">Enter a title, author, or search term first.</div>';
+    return;
+  }
+
+  if(!loadMore || searchIdentity!==currentSearchQuery){
+    currentSearchQuery=searchIdentity;
+    currentSearchPage=1;
+    accumulatedSearchDocs=[];
+    searchResults.innerHTML='<div class="hint">Searching…</div>';
+  } else {
+    currentSearchPage+=1;
+  }
+
+  params.set("limit","20");
+  params.set("page",String(currentSearchPage));
+
+  try{
+    const res=await fetch(`https://openlibrary.org/search.json?${params.toString()}`);
+    if(!res.ok)throw new Error("Search failed");
+    const data=await res.json();
+    const docs=(data.docs||[]);
+    accumulatedSearchDocs=[...accumulatedSearchDocs,...docs];
+
+    if(!accumulatedSearchDocs.length){
+      searchResults.innerHTML='<div class="hint">No matches found.</div>';
+      return;
+    }
+
+    const resultsHtml=accumulatedSearchDocs.map((d,i)=>{
+      const cover=d.cover_i?`https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`:"";
+      const author=(d.author_name||[])[0]||"Unknown author";
+      const year=d.first_publish_year||"";
+      const pages=d.number_of_pages_median||"";
+      const editionKeys=d.edition_key||[];
+      const workKey=(d.key||"").replace("/works/","");
+      return `<div class="search-result">
+        ${cover?`<img src="${cover}" alt="">`:`<div class="cover-placeholder">No cover</div>`}
+        <div>
+          <strong>${esc(d.title||"Untitled")}</strong>
+          <div class="hint">${esc(author)}${year?` · ${year}`:""}${pages?` · ${pages} pages`:""}</div>
+        </div>
+        <button type="button" onclick='chooseSearchResult(${JSON.stringify(JSON.stringify({
+          title:d.title||"",
+          author,
+          publicationYear:year,
+          pages,
+          coverUrl:cover,
+          editionKeys,
+          workKey,
+          subjects:d.subject||[]
+        }))})'>Use</button>
+      </div>`;
+    }).join("");
+
+    const moreAvailable=(data.numFound||0)>accumulatedSearchDocs.length;
+    searchResults.innerHTML=resultsHtml + (moreAvailable
+      ? `<div class="load-more-wrap"><button type="button" class="load-more-btn" id="loadMoreBtn">Show more results</button></div>`
+      : "");
+
+    const loadMoreBtn=$("loadMoreBtn");
+    if(loadMoreBtn){
+      loadMoreBtn.addEventListener("click",()=>searchBooks(true));
+    }
+  }catch(err){
+    if(loadMore){
+      currentSearchPage=Math.max(1,currentSearchPage-1);
+    }
+    searchResults.innerHTML='<div class="hint">Couldn’t reach the book search. You can still enter everything manually.</div>';
+  }
+}
+
+function inferGenreAndSubgenres(subjects){
+  const list=(subjects||[]).map(s=>String(s).toLowerCase());
+
+  const genreRules=[
+    ["Fantasy",["fantasy","magic","magical","fairy","dragons","sorcery","witches"]],
+    ["Romance",["romance","love stories","romantic fiction"]],
+    ["Science Fiction",["science fiction","space travel","aliens","time travel","dystopias","cyberpunk"]],
+    ["Mystery",["mystery","detective","crime fiction","murder"]],
+    ["Thriller",["thriller","suspense","psychological fiction"]],
+    ["Horror",["horror","ghosts","haunted","occult fiction"]],
+    ["Historical Fiction",["historical fiction","history -- fiction"]],
+    ["Contemporary",["contemporary fiction","domestic fiction"]],
+    ["Nonfiction",["nonfiction","essays","social sciences","history"]],
+    ["Biography",["biography","autobiography"]],
+    ["Memoir",["memoir","memoirs"]]
+  ];
+
+  let genre="";
+  for(const [name,terms] of genreRules){
+    if(list.some(s=>terms.some(t=>s.includes(t)))){
+      genre=name;
+      break;
+    }
+  }
+
+  const subgenreRules=[
+    ["Urban Fantasy",["urban fantasy"]],
+    ["Supernatural",["supernatural","paranormal"]],
+    ["Vampires",["vampires","vampire"]],
+    ["Space Opera",["space opera"]],
+    ["Dystopian",["dystopian","dystopias"]],
+    ["Cozy Mystery",["cozy mystery"]],
+    ["Dark Romance",["dark romance"]],
+    ["Romantic Fantasy",["romantic fantasy","romantasy"]],
+    ["Epic Fantasy",["epic fantasy"]],
+    ["High Fantasy",["high fantasy"]],
+    ["Historical Romance",["historical romance"]],
+    ["Paranormal Romance",["paranormal romance"]],
+    ["Psychological Thriller",["psychological thriller"]],
+    ["Young Adult",["young adult","juvenile fiction"]],
+    ["LGBTQ+",["gay fiction","lesbian fiction","lgbt","queer"]],
+    ["Mythology",["mythology","mythological fiction"]],
+    ["Time Travel",["time travel"]],
+    ["Post-apocalyptic",["post-apocalyptic","postapocalyptic"]],
+    ["Cyberpunk",["cyberpunk"]]
+  ];
+
+  const subs=[];
+  for(const [name,terms] of subgenreRules){
+    if(list.some(s=>terms.some(t=>s.includes(t)))) subs.push(name);
+  }
+
+  return {genre,subgenres:[...new Set(subs)].slice(0,4)};
+}
+
+async function fetchWorkSubjects(workKey){
+  if(!workKey)return [];
+  try{
+    const res=await fetch(`https://openlibrary.org/works/${encodeURIComponent(workKey)}.json`);
+    if(!res.ok)return [];
+    const data=await res.json();
+    return Array.isArray(data.subjects)?data.subjects:[];
+  }catch(e){
+    return [];
+  }
+}
+
+async function findPageCountForSelection(d){
+  if(Number(d.pages)>0) return Number(d.pages);
+
+  // First try several edition records returned by search.
+  for(const key of (d.editionKeys||[]).slice(0,8)){
+    try{
+      const res=await fetch(`https://openlibrary.org/books/${encodeURIComponent(key)}.json`);
+      if(!res.ok) continue;
+      const edition=await res.json();
+      const n=Number(edition.number_of_pages);
+      if(n>0) return n;
+    }catch(e){}
+  }
+
+  // Then ask Open Library for editions attached to the work and look for page counts.
+  if(d.workKey){
+    try{
+      const res=await fetch(`https://openlibrary.org/works/${encodeURIComponent(d.workKey)}/editions.json?limit=50`);
+      if(res.ok){
+        const data=await res.json();
+        const counts=(data.entries||[])
+          .map(e=>Number(e.number_of_pages))
+          .filter(n=>Number.isFinite(n) && n>0 && n<5000);
+
+        if(counts.length){
+          // Pick the median available edition length; this is usually safer than taking
+          // the first edition, which may be an odd format.
+          counts.sort((a,b)=>a-b);
+          return counts[Math.floor(counts.length/2)];
+        }
+      }
+    }catch(e){}
+  }
+
+  return "";
+}
+
+window.chooseSearchResult=async function(payload){
+  const d=JSON.parse(payload);
+  $("title").value=d.title||"";
+  $("author").value=d.author||"";
+  $("publicationYear").value=d.publicationYear||"";
+  $("coverUrl").value=d.coverUrl||"";
+  updateCoverPreview();
+
+  // Try to suggest genre/subgenres from Open Library subjects.
+  let subjects=Array.isArray(d.subjects)?d.subjects:[];
+  if(subjects.length<3 && d.workKey){
+    const workSubjects=await fetchWorkSubjects(d.workKey);
+    subjects=[...new Set([...subjects,...workSubjects])];
+  }
+  const inferred=inferGenreAndSubgenres(subjects);
+  if(inferred.genre && !$("genre").value.trim()) $("genre").value=inferred.genre;
+  if(inferred.subgenres.length && !$("subgenre").value.trim()) {
+    $("subgenre").value=inferred.subgenres.join(", ");
+  }
+
+  $("pages").value="";
+  $("pages").placeholder="Looking up page count…";
+
+  const pageCount=await findPageCountForSelection(d);
+  if(pageCount){
+    $("pages").value=pageCount;
+  }
+
+  $("pages").placeholder=pageCount ? "320" : "Page count not found — enter manually";
+  searchResults.innerHTML="";
+}
+
+function readingDays(book){
+  if(!book.dateStarted||!book.dateFinished)return "";
+  const a=new Date(book.dateStarted+"T00:00:00"),b=new Date(book.dateFinished+"T00:00:00");
+  if(isNaN(a)||isNaN(b)||b<a)return "";
+  return Math.floor((b-a)/86400000)+1;
+}
+
+
+function countedBooksForYear(year){
+  return books.filter(b=>Number(b.year)===Number(year) && !b.excludeStats);
+}
+function sideQuestBooksForYear(year){
+  return books.filter(b=>Number(b.year)===Number(year) && !!b.excludeStats);
+}
+function daysInYearForStats(year){
+  const now=new Date();
+  const y=Number(year);
+  if(y<now.getFullYear()){
+    return ((y%4===0 && y%100!==0)||y%400===0)?366:365;
+  }
+  if(y>now.getFullYear()) return 0;
+  const start=new Date(y,0,1);
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  return Math.floor((today-start)/86400000)+1;
+}
+function average(values){
+  const nums=values.map(Number).filter(v=>Number.isFinite(v));
+  return nums.length?nums.reduce((a,b)=>a+b,0)/nums.length:0;
+}
+function countBy(items, getter){
+  const out={};
+  items.forEach(item=>{
+    let raw=getter(item);
+    if(Array.isArray(raw)){
+      raw.forEach(x=>{
+        const key=String(x||"").trim();
+        if(key)out[key]=(out[key]||0)+1;
+      });
+      return;
+    }
+    const key=String(raw||"").trim();
+    if(key)out[key]=(out[key]||0)+1;
+  });
+  return out;
+}
+function splitMulti(value){
+  return String(value||"").split(",").map(s=>s.trim()).filter(Boolean);
+}
+function renderBreakdown(title,data){
+  const entries=Object.entries(data).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+  if(!entries.length)return "";
+  const max=Math.max(...entries.map(([,v])=>v),1);
+  return `<section class="card breakdown-card">
+    <h3 class="breakdown-title script">${esc(title)}</h3>
+    <div class="breakdown-list">
+      ${entries.map(([name,value])=>`
+        <div class="breakdown-row">
+          <div class="breakdown-name">${esc(name)}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${(value/max)*100}%"></div></div>
+          <div class="breakdown-count">${value}</div>
+        </div>`).join("")}
+    </div>
+  </section>`;
+}
+
+const chartColors=["#d98295","#f4b8c4","#a95c78","#fadadd","#c7a34a","#111111","#e8a6b3","#7f4450"];
+
+function pieSvg(data){
+  const entries=Object.entries(data).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  if(!entries.length)return `<div class="no-data">No data yet.</div>`;
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  let angle=-Math.PI/2;
+  const cx=75,cy=75,r=62;
+  const paths=entries.map(([name,value],i)=>{
+    const slice=(value/total)*Math.PI*2;
+    const end=angle+slice;
+    const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(end), y2=cy+r*Math.sin(end);
+    const large=slice>Math.PI?1:0;
+    const d=`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`;
+    angle=end;
+    return `<path d="${d}" fill="${chartColors[i%chartColors.length]}" stroke="#111" stroke-width="1.2"></path>`;
+  }).join("");
+  return `<svg class="pie-svg" viewBox="0 0 150 150">${paths}<circle cx="75" cy="75" r="30" fill="#fff"></circle></svg>`;
+}
+
+function pieLegend(data){
+  const entries=Object.entries(data).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const total=entries.reduce((s,[,v])=>s+v,0);
+  return `<div class="pie-legend">${entries.map(([name,value],i)=>`
+    <div class="legend-row">
+      <span class="legend-dot" style="background:${chartColors[i%chartColors.length]}"></span>
+      <span><strong>${esc(name)}</strong> · ${value} (${Math.round(value/total*100)}%)</span>
+    </div>`).join("")}</div>`;
+}
+
+function pieCard(title,data){
+  if(!Object.values(data).some(v=>v>0))return "";
+  return `<section class="pie-card">
+    ${pieSvg(data)}
+    <div>
+      <h3 class="visual-title script">${esc(title)}</h3>
+      ${pieLegend(data)}
+    </div>
+  </section>`;
+}
+
+function barChartSvg(values,labels,valueFormatter=v=>String(v)){
+  const w=720,h=260,padL=44,padR=18,padT=18,padB=42;
+  const plotW=w-padL-padR,plotH=h-padT-padB;
+  const max=Math.max(1,...values);
+  const barW=plotW/values.length*0.62;
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}">`;
+  for(let i=0;i<=4;i++){
+    const y=padT+plotH-(plotH*i/4);
+    svg+=`<line class="chart-grid" x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}"></line>`;
+    svg+=`<text class="chart-value" x="${padL-7}" y="${y+4}" text-anchor="end">${valueFormatter(max*i/4)}</text>`;
+  }
+  svg+=`<line class="chart-axis" x1="${padL}" y1="${padT+plotH}" x2="${w-padR}" y2="${padT+plotH}"></line>`;
+  values.forEach((v,i)=>{
+    const slot=plotW/values.length;
+    const x=padL+i*slot+(slot-barW)/2;
+    const bh=(v/max)*plotH;
+    const y=padT+plotH-bh;
+    svg+=`<rect class="chart-bar" x="${x}" y="${y}" width="${barW}" height="${bh}" rx="5"></rect>`;
+    svg+=`<text class="chart-label" x="${x+barW/2}" y="${h-18}" text-anchor="middle">${labels[i]}</text>`;
+    if(v>0)svg+=`<text class="chart-value" x="${x+barW/2}" y="${Math.max(12,y-5)}" text-anchor="middle">${valueFormatter(v)}</text>`;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+function lineChartSvg(values,labels){
+  const w=720,h=260,padL=44,padR=18,padT=18,padB=42;
+  const plotW=w-padL-padR,plotH=h-padT-padB;
+  const valid=values.filter(v=>v!==null && Number.isFinite(v));
+  const max=Math.max(5,...valid,1), min=0;
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}">`;
+  for(let i=0;i<=5;i++){
+    const y=padT+plotH-(plotH*i/5);
+    const val=(max*i/5).toFixed(1);
+    svg+=`<line class="chart-grid" x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}"></line>`;
+    svg+=`<text class="chart-value" x="${padL-7}" y="${y+4}" text-anchor="end">${val}</text>`;
+  }
+  svg+=`<line class="chart-axis" x1="${padL}" y1="${padT+plotH}" x2="${w-padR}" y2="${padT+plotH}"></line>`;
+  const pts=[];
+  values.forEach((v,i)=>{
+    const x=padL+(plotW/(values.length-1))*i;
+    svg+=`<text class="chart-label" x="${x}" y="${h-18}" text-anchor="middle">${labels[i]}</text>`;
+    if(v!==null && Number.isFinite(v)){
+      const y=padT+plotH-((v-min)/(max-min))*plotH;
+      pts.push([x,y,v]);
+    }
+  });
+  if(pts.length>1){
+    svg+=`<polyline class="chart-line" points="${pts.map(([x,y])=>`${x},${y}`).join(" ")}"></polyline>`;
+  }
+  pts.forEach(([x,y,v])=>{
+    svg+=`<circle class="chart-point" cx="${x}" cy="${y}" r="5"></circle>`;
+    svg+=`<text class="chart-value" x="${x}" y="${Math.max(12,y-9)}" text-anchor="middle">${v.toFixed(2)}</text>`;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+function buildMonthlyData(yearBooks){
+  const year=Number(selectedYear);
+  return Array.from({length:12},(_,month)=>{
+    const monthBooks=yearBooks.filter(b=>{
+      if(!b.dateFinished)return false;
+      const d=new Date(b.dateFinished+"T00:00:00");
+      return !isNaN(d)&&d.getFullYear()===year&&d.getMonth()===month;
+    });
+    const pages=monthBooks.reduce((s,b)=>s+(Number(b.pages)||0),0);
+    const ratings=monthBooks.map(b=>Number(b.rating)).filter(r=>r>0);
+    return {
+      month,
+      books:monthBooks.length,
+      pages,
+      rating:ratings.length?average(ratings):null
+    };
+  });
+}
+
+function renderStats(yearBooks){
+  const pages=yearBooks.reduce((sum,b)=>sum+(Number(b.pages)||0),0);
+  const days=daysInYearForStats(selectedYear);
+  const ratings=yearBooks.map(b=>Number(b.rating)).filter(r=>r>0);
+  const avgRating=average(ratings);
+  const highest=ratings.length?Math.max(...ratings):0;
+  const lowest=ratings.length?Math.min(...ratings):0;
+  const rereads=yearBooks.filter(b=>b.reread).length;
+
+  const cards=[
+    ["Books Read",yearBooks.length],
+    ["Total Pages",pages.toLocaleString()],
+    ["Pages / Day",days? (pages/days).toFixed(1) : "—"],
+    ["Average Rating",avgRating?avgRating.toFixed(2)+" ★":"—"],
+    ["Highest Rating",highest?highest+" ★":"—"],
+    ["Lowest Rating",lowest?lowest+" ★":"—"]
+  ];
+  statsGrid.innerHTML=cards.map(([label,value])=>`
+    <div class="stat-card">
+      <div class="stat-value">${value}</div>
+      <div class="stat-label">${label}</div>
+    </div>`).join("");
+
+  const seriesData=countBy(yearBooks,b=>b.seriesStatus||"Unspecified");
+  const rereadData={"First-time reads":yearBooks.length-rereads,"Rereads":rereads};
+  const formatData=countBy(yearBooks,b=>b.format||"Unspecified");
+  const bookTypeData=countBy(yearBooks,b=>b.bookType||"Novel");
+
+  statsPieGrid.innerHTML=
+    pieCard("Formats",formatData) +
+    pieCard("Series Journey",seriesData) +
+    pieCard("Rereads",rereadData) +
+    pieCard("Book Types",bookTypeData);
+
+  statsBreakdowns.innerHTML=
+    renderBreakdown("Genres",countBy(yearBooks,b=>splitMulti(b.genre))) +
+    renderBreakdown("Subgenres",countBy(yearBooks,b=>splitMulti(b.subgenre))) +
+    renderBreakdown("Formats",formatData) +
+    renderBreakdown("Series Journey",seriesData) +
+    renderBreakdown("Rereads",rereadData) +
+    renderBreakdown("Book Types",bookTypeData);
+}
+function monthName(index){
+  return ["January","February","March","April","May","June","July","August","September","October","November","December"][index];
+}
+function daysInMonth(year,monthIndex){
+  return new Date(year,monthIndex+1,0).getDate();
+}
+function renderMonths(yearBooks){
+  const year=Number(selectedYear);
+  const monthly=buildMonthlyData(yearBooks);
+  const shortLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+  monthlyBooksChart.innerHTML=barChartSvg(monthly.map(m=>m.books),shortLabels,v=>Math.round(v).toString());
+  monthlyPagesChart.innerHTML=barChartSvg(monthly.map(m=>m.pages),shortLabels,v=>Math.round(v).toLocaleString());
+  monthlyRatingChart.innerHTML=lineChartSvg(monthly.map(m=>m.rating),shortLabels);
+
+  monthGrid.innerHTML=monthly.map(m=>{
+    const monthBooks=yearBooks.filter(b=>{
+      if(!b.dateFinished)return false;
+      const d=new Date(b.dateFinished+"T00:00:00");
+      return !isNaN(d)&&d.getFullYear()===year&&d.getMonth()===m.month;
+    });
+    const ratings=monthBooks.map(b=>Number(b.rating)).filter(r=>r>0);
+    const avg=average(ratings);
+    const names=monthBooks.map(b=>esc(b.title)).join(" · ");
+    return `<article class="month-card">
+      <div class="month-title">${monthName(m.month)}</div>
+      <div class="month-metrics">
+        <div class="month-metric"><strong>${m.books}</strong><span>Books finished</span></div>
+        <div class="month-metric"><strong>${m.pages.toLocaleString()}</strong><span>Pages</span></div>
+        <div class="month-metric"><strong>${(m.pages/daysInMonth(year,m.month)).toFixed(1)}</strong><span>Pages / day</span></div>
+        <div class="month-metric"><strong>${avg?avg.toFixed(2)+" ★":"—"}</strong><span>Avg. rating</span></div>
+      </div>
+      ${names?`<div class="month-books">${names}</div>`:""}
+    </article>`;
+  }).join("");
+}
+
+function renderNotes(items){
+  const withNotes=items
+    .filter(b=>String(b.notes||"").trim())
+    .slice()
+    .sort((a,b)=>(b.dateFinished||"").localeCompare(a.dateFinished||"") || (b.createdAt||0)-(a.createdAt||0));
+
+  if(!withNotes.length){
+    notesList.innerHTML=`<div class="card empty"><strong class="script">No notes yet ♡</strong>Your book notes will appear here once you add some.</div>`;
+    return;
+  }
+
+  notesList.innerHTML=withNotes.map(book=>`
+    <article class="card note-card">
+      ${(book.coverDataUrl||book.coverUrl)
+        ? `<img class="note-cover" src="${esc(book.coverDataUrl||book.coverUrl)}" alt="">`
+        : `<div class="note-cover cover-placeholder">No cover</div>`}
+      <div>
+        <div class="note-title">${esc(book.title)}</div>
+        <div class="note-meta">${esc(book.author)}${book.dateFinished?` · Finished ${esc(book.dateFinished)}`:""}</div>
+        <div class="note-text">${esc(book.notes)}</div>
+      </div>
+      <div class="note-actions">
+        <button class="icon-btn" type="button" title="Edit" onclick="editBook('${book.id}')">✎</button>
+      </div>
+    </article>
+  `).join("");
+}
+
+
+
+function persistSeriesFolders(){
+  localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
+}
+
+function renderSeriesFolders(){
+  if(activeSeriesFolderId){
+    renderActiveSeriesFolder();
+    return;
+  }
+
+  seriesFolderDetail.classList.add("hidden-field");
+  seriesFolderList.classList.remove("hidden-field");
+
+  if(!seriesFolders.length){
+    seriesFolderList.innerHTML=`<div class="card empty"><strong class="script">No series yet ♡</strong>Create a series folder to keep all your continuity notes together.</div>`;
+    return;
+  }
+
+  seriesFolderList.innerHTML=seriesFolders
+    .slice()
+    .sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0))
+    .map(folder=>`
+      <article class="card series-folder-card">
+        <div class="series-folder-main">
+          <div class="series-folder-title">${esc(folder.name)}</div>
+          <div class="series-folder-meta">${folder.author?esc(folder.author)+" · ":""}${(folder.entries||[]).length} note${(folder.entries||[]).length===1?"":"s"}</div>
+        </div>
+        <button type="button" class="series-folder-open" onclick="openSeriesFolder('${folder.id}')">Open</button>
+      </article>
+    `).join("");
+}
+
+window.openSeriesFolder=function(id){
+  activeSeriesFolderId=id;
+  renderActiveSeriesFolder();
+}
+
+function renderActiveSeriesFolder(){
+  const folder=seriesFolders.find(f=>f.id===activeSeriesFolderId);
+  if(!folder){
+    activeSeriesFolderId=null;
+    renderSeriesFolders();
+    return;
+  }
+
+  seriesFolderList.classList.add("hidden-field");
+  seriesFolderDetail.classList.remove("hidden-field");
+  $("seriesDetailHeading").textContent=folder.name;
+  $("seriesDetailAuthor").textContent=folder.author||"";
+
+  const entries=(folder.entries||[]).slice().sort((a,b)=>(b.updatedAt||0)-(a.updatedAt||0));
+  if(!entries.length){
+    seriesEntryList.innerHTML=`<div class="card empty"><strong class="script">No notes yet ♡</strong>Add your first continuity note for this series.</div>`;
+  } else {
+    seriesEntryList.innerHTML=entries.map(entry=>`
+      <article class="card series-entry-card">
+        <div class="series-note-header">
+          <div>
+            <div class="series-entry-book">${esc(entry.book||"General series note")}</div>
+          </div>
+          <div class="series-note-actions">
+            <button class="icon-btn" type="button" onclick="editSeriesEntry('${entry.id}')">✎</button>
+            <button class="icon-btn" type="button" onclick="deleteSeriesEntry('${entry.id}')">×</button>
+          </div>
+        </div>
+        <div class="series-entry-text">${esc(entry.text)}</div>
+      </article>
+    `).join("");
+  }
+}
+
+$("addSeriesBtn").addEventListener("click",()=>{
+  editingSeriesFolderId=null;
+  $("seriesFolderName").value="";
+  $("seriesFolderAuthor").value="";
+  $("seriesFolderFormHeading").textContent="new series";
+  $("saveSeriesFolderBtn").textContent="Create series";
+  $("seriesFolderForm").classList.remove("hidden-field");
+});
+
+$("cancelSeriesFolderBtn").addEventListener("click",()=>{
+  $("seriesFolderForm").classList.add("hidden-field");
+});
+
+$("saveSeriesFolderBtn").addEventListener("click",()=>{
+  const name=$("seriesFolderName").value.trim();
+  const author=$("seriesFolderAuthor").value.trim();
+  if(!name)return;
+
+  const folder={
+    id:editingSeriesFolderId || (crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+    name,
+    author,
+    entries:[],
+    updatedAt:Date.now()
+  };
+
+  if(editingSeriesFolderId){
+    const old=seriesFolders.find(f=>f.id===editingSeriesFolderId);
+    folder.entries=old?.entries||[];
+    seriesFolders=seriesFolders.map(f=>f.id===editingSeriesFolderId?folder:f);
+  } else {
+    seriesFolders.push(folder);
+  }
+
+  persistSeriesFolders();
+  $("seriesFolderForm").classList.add("hidden-field");
+  renderSeriesFolders();
+});
+
+$("backToSeriesBtn").addEventListener("click",()=>{
+  activeSeriesFolderId=null;
+  editingSeriesEntryId=null;
+  $("seriesEntryForm").classList.add("hidden-field");
+  renderSeriesFolders();
+});
+
+$("addSeriesEntryBtn").addEventListener("click",()=>{
+  editingSeriesEntryId=null;
+  $("seriesEntryBook").value="";
+  $("seriesEntryText").value="";
+  $("seriesEntryFormHeading").textContent="new note";
+  $("saveSeriesEntryBtn").textContent="Save note";
+  $("seriesEntryForm").classList.remove("hidden-field");
+});
+
+$("cancelSeriesEntryBtn").addEventListener("click",()=>{
+  $("seriesEntryForm").classList.add("hidden-field");
+});
+
+$("saveSeriesEntryBtn").addEventListener("click",()=>{
+  const folder=seriesFolders.find(f=>f.id===activeSeriesFolderId);
+  if(!folder)return;
+  const book=$("seriesEntryBook").value.trim();
+  const text=$("seriesEntryText").value.trim();
+  if(!text)return;
+
+  const entry={
+    id:editingSeriesEntryId || (crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+    book,
+    text,
+    updatedAt:Date.now()
+  };
+
+  folder.entries=folder.entries||[];
+  if(editingSeriesEntryId){
+    folder.entries=folder.entries.map(e=>e.id===editingSeriesEntryId?entry:e);
+  }else{
+    folder.entries.push(entry);
+  }
+  folder.updatedAt=Date.now();
+
+  persistSeriesFolders();
+  $("seriesEntryForm").classList.add("hidden-field");
+  editingSeriesEntryId=null;
+  renderActiveSeriesFolder();
+});
+
+window.editSeriesEntry=function(id){
+  const folder=seriesFolders.find(f=>f.id===activeSeriesFolderId);
+  const entry=folder?.entries?.find(e=>e.id===id);
+  if(!entry)return;
+  editingSeriesEntryId=id;
+  $("seriesEntryBook").value=entry.book||"";
+  $("seriesEntryText").value=entry.text||"";
+  $("seriesEntryFormHeading").textContent="Edit Note";
+  $("saveSeriesEntryBtn").textContent="Save changes";
+  $("seriesEntryForm").classList.remove("hidden-field");
+  $("seriesEntryForm").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+window.deleteSeriesEntry=function(id){
+  const folder=seriesFolders.find(f=>f.id===activeSeriesFolderId);
+  if(!folder)return;
+  folder.entries=(folder.entries||[]).filter(e=>e.id!==id);
+  folder.updatedAt=Date.now();
+  persistSeriesFolders();
+  renderActiveSeriesFolder();
+}
+
+function renderBookCards(target,items,emptyTitle,emptyText){
+  if(!items.length){
+    target.innerHTML=`<div class="card empty"><strong class="script">${esc(emptyTitle)}</strong>${esc(emptyText)}</div>`;
+    return;
+  }
+  target.innerHTML=items.slice().sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).map(book=>{
+    const days=readingDays(book);
+    return `<article class="card book ${(book.coverDataUrl||book.coverUrl)?"with-cover":""}">
+      ${(book.coverDataUrl||book.coverUrl)?`<img class="book-list-cover" src="${esc(book.coverDataUrl||book.coverUrl)}" alt="">`:""}
+      <div>
+        <div class="book-title">${esc(book.title)}</div>
+        <div class="book-meta">${esc(book.author)}${book.pages?` · ${book.pages} pages`:""} · <span class="stars">${starText(book.rating)}</span>${book.format?` · ${esc(book.format)}`:""}${days?` · ${days} day${days===1?"":"s"}`:""}</div>
+      </div>
+      <div class="book-actions">
+        <button class="icon-btn" type="button" onclick="editBook('${book.id}')">✎</button>
+        <button class="icon-btn" type="button" onclick="deleteBook('${book.id}')">×</button>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+function render(){
+  buildYearControls();
+
+  const mainBooks=countedBooksForYear(selectedYear);
+  const sideBooks=sideQuestBooksForYear(selectedYear);
+
+  count.textContent=`${mainBooks.length} ${mainBooks.length===1?"book":"books"}`;
+  yearHeading.textContent=`Your ${selectedYear} books`;
+  $("statsHeading").textContent=`${selectedYear} Year Overview`;
+  $("monthsHeading").textContent=`${selectedYear} by Month`;
+  $("notesHeading").textContent=`${selectedYear} Reading Notes`;
+  $("sideQuestHeading").textContent=`${selectedYear} Side Quest Reads`;
+
+  renderBookCards(list,mainBooks,"No books yet ♡",`Add your first ${selectedYear} read above.`);
+  renderNotes(mainBooks);
+  renderSeriesFolders();
+  renderBookCards(sideQuestList,sideBooks,"No side quests yet ♡","Books excluded from stats will appear here.");
+  renderStats(mainBooks);
+  renderMonths(mainBooks);
+}
+
+$("bookForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  const book={
+    id:editingId||(crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+    title:$("title").value.trim(),
+    author:$("author").value.trim(),
+    publicationYear:$("publicationYear").value.trim(),
+    pages:Number($("pages").value)||"",
+    rating:Number($("rating").value)||0,
+    year:Number($("year").value),
+    genre:$("genre").value.trim(),
+    subgenre:$("subgenre").value.trim(),
+    tags:$("tags").value.trim(),
+    format:$("format").value,
+    audioLength:$("audioLength").value.trim(),
+    bookType:$("bookType").value.trim()||"Novel",
+    reread:$("reread").checked,
+    seriesStatus:(document.querySelector('input[name="seriesStatus"]:checked')||{}).value||"",
+    dateStarted:$("dateStarted").value,
+    dateFinished:$("dateFinished").value,
+    coverUrl:$("coverUrl").value.trim(),
+    notes:$("notes").value.trim(),
+    excludeStats:$("excludeStats").checked,
+    coverDataUrl:"",
+    createdAt:Date.now()
+  };
+  if(editingId){
+    const old=books.find(b=>b.id===editingId);
+    book.createdAt=old?.createdAt||Date.now();
+    book.coverDataUrl=(old?.coverUrl===book.coverUrl ? old?.coverDataUrl||"" : "");
+  }
+  if(book.coverUrl && !book.coverDataUrl){
+    book.coverDataUrl=await cacheCoverAsDataUrl(book.coverUrl);
+  }
+  if(editingId){
+    books=books.map(b=>b.id===editingId?book:b);
+  } else books.push(book);
+  selectedYear=book.year;
+  persist();resetForm();render();
+});
+
+cancelBtn.addEventListener("click",resetForm);
+
+window.editBook=id=>{
+  const b=books.find(x=>x.id===id);if(!b)return;
+  editingId=id;
+  fields.forEach(f=>{if($(f))$(f).value=b[f]??""});
+  $("reread").checked=!!b.reread;
+  $("excludeStats").checked=!!b.excludeStats;
+  document.querySelectorAll('input[name="seriesStatus"]').forEach(r=>r.checked=(r.value===(b.seriesStatus||"")));
+  setRating(b.rating);
+  updateCoverPreview();
+  updateConditionalFields();
+  updateReadingDuration();
+  formHeading.textContent="Edit Read";
+  saveBtn.textContent="Save changes";
+  cancelBtn.hidden=false;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+window.deleteBook=id=>{
+  const b=books.find(x=>x.id===id);if(!b||!confirm(`Delete "${b.title}"?`))return;
+  books=books.filter(x=>x.id!==id);
+  if(editingId===id)resetForm();
+  persist();render();
+}
+function resetForm(){
+  editingId=null;
+  $("bookForm").reset();
+  $("bookType").value="Novel";
+  setRating(0);
+  $("coverUrl").value="";
+  updateCoverPreview();
+  searchResults.innerHTML="";
+  $("searchQuery").value="";
+  document.querySelectorAll('input[name="seriesStatus"]').forEach(r=>r.checked=false);
+  updateConditionalFields();
+  updateReadingDuration();
+  formHeading.textContent="New Read";
+  saveBtn.textContent="Save book";
+  cancelBtn.hidden=true;
+  yearInput.value=selectedYear;
+}
+setRating(0);updateCoverPreview();updateConditionalFields();updateReadingDuration();render();
+</script>
+</body>
+</html>

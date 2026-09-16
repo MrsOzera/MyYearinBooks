@@ -1,22 +1,29 @@
 const CLOUD_API = "https://myyearinbooksapi.williams-leandra-53.workers.dev";
 const SYNC_TOKEN_KEY = "myYearInBooksSyncToken";
+const SYNC_DIRTY_KEY = "myYearInBooksUnsyncedChanges";
 const SYNC_LAST_STATE_KEY = "myYearInBooksLastSyncedState";
 const LAST_READING_YEAR_KEY = "myYearInBooksLastReadingYear";
 
-function getLocalState(){
-  return {
-    books: Array.isArray(books) ? books : [],
-    seriesFolders: Array.isArray(seriesFolders) ? seriesFolders : []
-  };
+// Keep cloud/local state small. Cover images are loaded from coverUrl instead of storing
+// large base64 image blobs in localStorage/D1 (which can hit Safari's storage quota).
+function cleanBook(book){
+  const copy={...book};
+  delete copy.coverDataUrl;
+  return copy;
 }
-function normalizedState(state){
+function cleanState(state){
   return {
-    books:Array.isArray(state?.books)?state.books:[],
+    books:Array.isArray(state?.books)?state.books.map(cleanBook):[],
     seriesFolders:Array.isArray(state?.seriesFolders)?state.seriesFolders:[]
   };
 }
-function localStateString(){ return JSON.stringify(getLocalState()); }
-function stateString(state){ return JSON.stringify(normalizedState(state)); }
+function getLocalState(){
+  return cleanState({books,seriesFolders});
+}
+function isEmptyState(state){
+  const s=cleanState(state);
+  return !s.books.length && !s.seriesFolders.length;
+}
 
 function showSyncStatus(text){
   let el=document.getElementById("cloudSyncStatus");
@@ -29,161 +36,143 @@ function showSyncStatus(text){
   el.textContent=text;
 }
 
-// Safari-friendly transport: POST text/plain so the browser does not need a CORS preflight.
-async function cloudRequest(action, state){
+// Do not create/store base64 cover images anymore. Normal cover URLs still display.
+try{ cacheCoverAsDataUrl=async()=>""; }catch(_e){}
+
+// Immediately shrink any existing local copy that still contains cached cover images.
+try{
+  books=(Array.isArray(books)?books:[]).map(cleanBook);
+  localStorage.setItem(KEY,JSON.stringify(books));
+}catch(_e){
+  // If Safari is already at quota, the next successful cloud pull will replace the old entry.
+}
+
+// Safari-friendly API transport: POST text/plain avoids a CORS preflight.
+async function cloudRequest(action,state){
   const token=localStorage.getItem(SYNC_TOKEN_KEY);
   if(!token) throw new Error("NO_TOKEN");
+  const path=action==="write"?"/state/write":"/state/read";
+  const payload=action==="write"?{token,state:cleanState(state)}:{token};
 
-  const path=action==="write" ? "/state/write" : "/state/read";
-  const payload=action==="write" ? {token,state} : {token};
-
-  let res;
+  let response;
   try{
-    res=await fetch(CLOUD_API+path,{
+    response=await fetch(CLOUD_API+path,{
       method:"POST",
       headers:{"Content-Type":"text/plain;charset=UTF-8"},
       body:JSON.stringify(payload),
       cache:"no-store"
     });
-  }catch(err){
+  }catch(_e){
     throw new Error("NETWORK");
   }
 
-  if(res.status===401) throw new Error("UNAUTHORIZED");
-  if(!res.ok) throw new Error("HTTP_"+res.status);
-  return res.json();
+  if(response.status===401) throw new Error("UNAUTHORIZED");
+  if(response.status===409) throw new Error("PROTECTED");
+  if(!response.ok) throw new Error("HTTP_"+response.status);
+  return response.json();
 }
 
-let localDirty=false;
-let syncInProgress=false;
-let lastSyncError="";
+function markDirty(){
+  localStorage.setItem(SYNC_DIRTY_KEY,"1");
+  showSyncStatus("syncing…");
+}
+function clearDirty(){
+  localStorage.removeItem(SYNC_DIRTY_KEY);
+}
+function hasDirtyChanges(){
+  return localStorage.getItem(SYNC_DIRTY_KEY)==="1";
+}
 
-// Mark data dirty at the exact moment the app saves local changes.
-const originalPersist=persist;
+// Replace the app's persistence functions with lightweight versions and mark only real
+// user changes as needing upload.
 persist=function(){
-  originalPersist();
-  localDirty=true;
-  showSyncStatus("syncing…");
+  const state=getLocalState();
+  try{ localStorage.setItem(KEY,JSON.stringify(state.books)); }
+  catch(_e){ showSyncStatus("local storage full · cloud copy safe"); }
+  markDirty();
 };
-const originalPersistSeriesFolders=persistSeriesFolders;
 persistSeriesFolders=function(){
-  originalPersistSeriesFolders();
-  localDirty=true;
-  showSyncStatus("syncing…");
+  try{ localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders)); }
+  catch(_e){ showSyncStatus("local storage full · cloud copy safe"); }
+  markDirty();
 };
+
+async function applyCloudState(state){
+  const clean=cleanState(state);
+  books=clean.books;
+  seriesFolders=clean.seriesFolders;
+  try{
+    localStorage.setItem(KEY,JSON.stringify(books));
+    localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
+    localStorage.setItem(SYNC_LAST_STATE_KEY,JSON.stringify(clean));
+  }catch(_e){
+    // The important copy is already in Cloudflare; render it even if Safari refuses cache storage.
+  }
+  clearDirty();
+  render();
+  showSyncStatus("cloud synced ♡");
+}
 
 async function uploadLocalState(){
   const state=getLocalState();
+  // An empty browser cache must never erase a populated cloud library.
+  if(isEmptyState(state)){
+    clearDirty();
+    showSyncStatus("cloud safe · nothing local to upload");
+    return;
+  }
   await cloudRequest("write",state);
-  const s=JSON.stringify(state);
-  localStorage.setItem(SYNC_LAST_STATE_KEY,s);
-  localDirty=false;
-  lastSyncError="";
+  try{ localStorage.setItem(SYNC_LAST_STATE_KEY,JSON.stringify(state)); }catch(_e){}
+  clearDirty();
   showSyncStatus("cloud synced ♡");
 }
 
-async function applyCloudState(state){
-  const clean=normalizedState(state);
-  books=clean.books;
-  seriesFolders=clean.seriesFolders;
-  localStorage.setItem(KEY,JSON.stringify(books));
-  localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
-  render();
-  localStorage.setItem(SYNC_LAST_STATE_KEY,JSON.stringify(clean));
-  localDirty=false;
-  lastSyncError="";
-  showSyncStatus("cloud synced ♡");
-}
-
-function mergeById(cloudItems,localItems){
-  const map=new Map();
-  (localItems||[]).forEach(item=>map.set(item.id,item));
-  (cloudItems||[]).forEach(item=>map.set(item.id,item));
-  return [...map.values()];
-}
-function mergeStates(cloud,local){
-  return {
-    books:mergeById(cloud.books,local.books),
-    seriesFolders:mergeById(cloud.seriesFolders,local.seriesFolders)
-  };
-}
-
-async function handleSyncError(e){
-  lastSyncError=e.message||"UNKNOWN";
-  if(e.message==="UNAUTHORIZED"){
-    localStorage.removeItem(SYNC_TOKEN_KEY);
-    const replacement=prompt("Your cloud sync key was not accepted. Enter the current sync key:");
-    if(replacement){
-      localStorage.setItem(SYNC_TOKEN_KEY,replacement.trim());
-      showSyncStatus("checking cloud…");
+let syncBusy=false;
+async function pullCloud(){
+  if(syncBusy || hasDirtyChanges()) return;
+  syncBusy=true;
+  try{
+    const cloud=cleanState(await cloudRequest("read"));
+    // Cloud is the source of truth on a clean/new session. An empty local cache never uploads itself.
+    if(!isEmptyState(cloud)){
+      await applyCloudState(cloud);
     }else{
-      showSyncStatus("cloud sync locked");
+      showSyncStatus("cloud empty · local copy kept");
     }
-  }else if(e.message==="NETWORK"){
-    showSyncStatus("cloud unavailable · local changes kept");
-  }else{
-    showSyncStatus("sync error · "+e.message);
+  }catch(e){
+    handleSyncError(e);
+  }finally{
+    syncBusy=false;
   }
 }
 
-async function syncNow({allowPull=true}={}){
-  if(syncInProgress)return;
-  syncInProgress=true;
+async function pushDirty(){
+  if(syncBusy || !hasDirtyChanges()) return;
+  syncBusy=true;
   try{
-    if(localDirty){
-      await uploadLocalState();
-      return;
-    }
-
-    const cloud=normalizedState(await cloudRequest("read"));
-    const cloudStr=JSON.stringify(cloud);
-    const local=getLocalState();
-    const localStr=JSON.stringify(local);
-    const last=localStorage.getItem(SYNC_LAST_STATE_KEY);
-
-    if(cloudStr===localStr){
-      localStorage.setItem(SYNC_LAST_STATE_KEY,localStr);
-      showSyncStatus("cloud synced ♡");
-      return;
-    }
-
-    const cloudEmpty=!cloud.books.length && !cloud.seriesFolders.length;
-    const localEmpty=!local.books.length && !local.seriesFolders.length;
-
-    if(cloudEmpty && !localEmpty){
-      localDirty=true;
-      await uploadLocalState();
-      return;
-    }
-    if(!cloudEmpty && localEmpty){
-      if(allowPull) await applyCloudState(cloud);
-      return;
-    }
-
-    if(last && last===localStr){
-      if(allowPull) await applyCloudState(cloud);
-      return;
-    }
-
-    if(last && last===cloudStr){
-      localDirty=true;
-      await uploadLocalState();
-      return;
-    }
-
-    const merged=mergeStates(cloud,local);
-    books=merged.books;
-    seriesFolders=merged.seriesFolders;
-    localStorage.setItem(KEY,JSON.stringify(books));
-    localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
-    render();
-    localDirty=true;
     await uploadLocalState();
   }catch(e){
-    await handleSyncError(e);
+    handleSyncError(e);
   }finally{
-    syncInProgress=false;
+    syncBusy=false;
   }
+}
+
+function handleSyncError(e){
+  if(e.message==="UNAUTHORIZED"){
+    localStorage.removeItem(SYNC_TOKEN_KEY);
+    showSyncStatus("cloud sync locked");
+    return;
+  }
+  if(e.message==="PROTECTED"){
+    showSyncStatus("cloud protected · empty overwrite blocked");
+    return;
+  }
+  if(e.message==="NETWORK"){
+    showSyncStatus(hasDirtyChanges()?"cloud unavailable · local changes kept":"cloud unavailable");
+    return;
+  }
+  showSyncStatus("sync error · "+e.message);
 }
 
 async function startCloudSync(){
@@ -194,27 +183,27 @@ async function startCloudSync(){
     localStorage.setItem(SYNC_TOKEN_KEY,token.trim());
   }
 
-  showSyncStatus("checking cloud…");
-  await syncNow({allowPull:true});
+  // If an earlier offline edit is explicitly marked dirty, preserve and upload it first.
+  // Otherwise ALWAYS read Cloudflare first. A cleared/new browser session cannot overwrite cloud data.
+  if(hasDirtyChanges() && !isEmptyState(getLocalState())){
+    showSyncStatus("syncing saved changes…");
+    await pushDirty();
+  }else{
+    clearDirty();
+    showSyncStatus("loading cloud…");
+    await pullCloud();
+  }
 
-  setInterval(async()=>{
-    if(localDirty) await syncNow({allowPull:false});
-  },1200);
+  // User edits upload promptly; clean devices periodically pull changes from other devices.
+  setInterval(()=>{ if(hasDirtyChanges()) pushDirty(); },2000);
+  setInterval(()=>{ if(document.visibilityState==="visible" && !hasDirtyChanges()) pullCloud(); },10000);
 
-  setInterval(async()=>{
-    if(document.visibilityState==="visible" && !localDirty){
-      await syncNow({allowPull:true});
-    }
-  },8000);
-
-  document.addEventListener("visibilitychange",async()=>{
-    if(document.visibilityState==="visible"){
-      showSyncStatus(localDirty?"syncing…":"checking cloud…");
-      await syncNow({allowPull:!localDirty});
-    }
+  document.addEventListener("visibilitychange",()=>{
+    if(document.visibilityState!=="visible") return;
+    if(hasDirtyChanges()) pushDirty(); else pullCloud();
   });
-  window.addEventListener("focus",async()=>{
-    await syncNow({allowPull:!localDirty});
+  window.addEventListener("focus",()=>{
+    if(hasDirtyChanges()) pushDirty(); else pullCloud();
   });
 }
 
@@ -258,6 +247,7 @@ function setupReadingDateControl(id){
   if(!hidden || hidden.dataset.yearPrefillReady) return;
   hidden.dataset.yearPrefillReady="1";
   hidden.type="hidden";
+
   const wrap=document.createElement("div");
   wrap.style.cssText="display:grid;grid-template-columns:minmax(62px,.7fr) 18px minmax(62px,.7fr) 18px minmax(92px,1fr);align-items:center;border:1.5px solid #111;border-radius:16px;background:#fffafb;overflow:hidden;min-height:48px";
   wrap.innerHTML=`
@@ -284,14 +274,19 @@ function setupReadingDateControl(id){
     hidden.value=valid ? `${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
     hidden.dispatchEvent(new Event("change",{bubbles:true}));
   }
+
   day.addEventListener("input",syncHidden);
   month.addEventListener("input",syncHidden);
+
   control.syncFromHidden=()=>{
     const match=String(hidden.value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if(match){
-      year.value=match[1];month.value=String(Number(match[2]));day.value=String(Number(match[3]));
+      year.value=match[1];
+      month.value=String(Number(match[2]));
+      day.value=String(Number(match[3]));
     }else{
-      day.value="";month.value="";
+      day.value="";
+      month.value="";
       year.value=String(document.getElementById("year")?.value || selectedYear || new Date().getFullYear());
     }
   };
@@ -301,7 +296,11 @@ function setupReadingDateControl(id){
   };
   control.syncFromHidden();
 }
-function updateReadingDateYears(){ readingDateControls.forEach(c=>c.setYear()); }
+
+function updateReadingDateYears(){
+  readingDateControls.forEach(c=>c.setYear());
+}
+
 setupReadingDateControl("dateStarted");
 setupReadingDateControl("dateFinished");
 
@@ -319,6 +318,7 @@ window.editBook=id=>{
   originalEditBook(id);
   setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
 };
+
 document.getElementById("bookForm")?.addEventListener("reset",()=>{
   setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
 });

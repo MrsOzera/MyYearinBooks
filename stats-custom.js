@@ -108,5 +108,15 @@ renderMonths = function(yearBooks){
   }).join("");
 };
 
+// Keep wrapped pie-chart titles visually together, e.g. “series journey”.
+const pieTitleStyle=document.createElement("style");
+pieTitleStyle.textContent=`
+  .pie-card .visual-title{
+    line-height:.82;
+    margin-bottom:10px;
+  }
+`;
+document.head.appendChild(pieTitleStyle);
+
 // Refresh the current view once these overrides are loaded.
 render();

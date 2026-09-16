@@ -1504,7 +1504,7 @@ function lineChartSvg(values,labels){
   return svg;
 }
 
-function monthlyLineChartSvg(values,labels,{integer=false,format=v=>String()}={}){
+function monthlyLineChartSvg(values,labels,{integer=false,format=v=>String(v)}={}){
   const w=720,h=260,padL=50,padR=18,padT=22,padB=42;
   const plotW=w-padL-padR,plotH=h-padT-padB;
   const valid=values.filter(v=>Number.isFinite(v));

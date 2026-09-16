@@ -118,5 +118,45 @@ pieTitleStyle.textContent=`
 `;
 document.head.appendChild(pieTitleStyle);
 
+// Make the cloud-status pill double as a safe “change sync key” control.
+function enableSyncKeyControl(){
+  const pill=document.getElementById("cloudSyncStatus");
+  if(!pill || pill.dataset.keyControlReady) return;
+  pill.dataset.keyControlReady="1";
+  pill.style.cursor="pointer";
+  pill.title="Tap to change cloud sync key";
+  pill.addEventListener("click",async()=>{
+    const next=prompt("Enter your new private cloud sync key:");
+    if(!next) return;
+    localStorage.setItem(SYNC_TOKEN_KEY,next.trim());
+    pill.textContent="checking cloud…";
+    try{
+      await cloudRequest("GET");
+      await uploadLocalState();
+      pill.textContent="cloud synced ♡";
+    }catch(e){
+      if(e.message==="UNAUTHORIZED"){
+        localStorage.removeItem(SYNC_TOKEN_KEY);
+        alert("That sync key was not accepted. Tap the cloud status and try again.");
+        pill.textContent="cloud sync locked";
+      }else{
+        pill.textContent="cloud unavailable";
+      }
+    }
+  });
+}
+
+// If an old token is rejected, offer the replacement immediately without deleting book data.
+const syncUiObserver=new MutationObserver(()=>{
+  enableSyncKeyControl();
+  const pill=document.getElementById("cloudSyncStatus");
+  if(pill && pill.textContent==="cloud sync locked" && !pill.dataset.autoPrompted){
+    pill.dataset.autoPrompted="1";
+    setTimeout(()=>pill.click(),100);
+  }
+});
+syncUiObserver.observe(document.body,{childList:true,subtree:true,characterData:true});
+enableSyncKeyControl();
+
 // Refresh the current view once these overrides are loaded.
 render();

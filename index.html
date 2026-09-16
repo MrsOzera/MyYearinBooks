@@ -741,6 +741,13 @@ h1,.page-heading,.form-title{font-weight:400;}
   }
 }
 
+
+/* Keep wrapped pie-chart titles visually together. */
+.pie-card .visual-title{
+  line-height:.82;
+  margin-bottom:10px;
+}
+
 </style>
 </head>
 <body>
@@ -1397,7 +1404,7 @@ function renderBreakdown(title,data){
   </section>`;
 }
 
-const chartColors=["#d98295","#f4b8c4","#a95c78","#fadadd","#c7a34a","#111111","#e8a6b3","#7f4450"];
+const chartColors=["#F4B8C4","#F6DEA8","#BFD7EA","#BFD8C0","#D7C5E8","#F5C6A5","#FADADD","#BFE3DF"];
 
 function pieSvg(data){
   const entries=Object.entries(data).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
@@ -1497,6 +1504,39 @@ function lineChartSvg(values,labels){
   return svg;
 }
 
+function monthlyLineChartSvg(values,labels,{integer=false,format=v=>String()}={}){
+  const w=720,h=260,padL=50,padR=18,padT=22,padB=42;
+  const plotW=w-padL-padR,plotH=h-padT-padB;
+  const valid=values.filter(v=>Number.isFinite(v));
+  let max=Math.max(...valid,1);
+  if(integer) max=Math.max(1,Math.ceil(max));
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}">`;
+  for(let i=0;i<=5;i++){
+    const y=padT+plotH-(plotH*i/5);
+    const raw=max*i/5;
+    const label=integer ? Math.round(raw) : raw;
+    svg+=`<line class="chart-grid" x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}"></line>`;
+    svg+=`<text class="chart-value" x="${padL-7}" y="${y+4}" text-anchor="end">${format(label)}</text>`;
+  }
+  svg+=`<line class="chart-axis" x1="${padL}" y1="${padT+plotH}" x2="${w-padR}" y2="${padT+plotH}"></line>`;
+  const pts=[];
+  values.forEach((v,i)=>{
+    const x=padL+(plotW/(values.length-1))*i;
+    const y=padT+plotH-(Number(v||0)/max)*plotH;
+    pts.push([x,y,Number(v||0)]);
+    svg+=`<text class="chart-label" x="${x}" y="${h-18}" text-anchor="middle">${labels[i]}</text>`;
+  });
+  if(pts.length>1){
+    svg+=`<polyline class="chart-line" points="${pts.map(([x,y])=>`${x},${y}`).join(" ")}"></polyline>`;
+  }
+  pts.forEach(([x,y,v])=>{
+    svg+=`<circle class="chart-point" cx="${x}" cy="${y}" r="5"></circle>`;
+    svg+=`<text class="chart-value" x="${x}" y="${Math.max(12,y-9)}" text-anchor="middle">${format(v)}</text>`;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
 function buildMonthlyData(yearBooks){
   const year=Number(selectedYear);
   return Array.from({length:12},(_,month)=>{
@@ -1569,8 +1609,8 @@ function renderMonths(yearBooks){
   const monthly=buildMonthlyData(yearBooks);
   const shortLabels=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-  monthlyBooksChart.innerHTML=barChartSvg(monthly.map(m=>m.books),shortLabels,v=>Math.round(v).toString());
-  monthlyPagesChart.innerHTML=barChartSvg(monthly.map(m=>m.pages),shortLabels,v=>Math.round(v).toLocaleString());
+  monthlyBooksChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.books),shortLabels,{integer:true,format:v=>String(Math.round(v))});
+  monthlyPagesChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.pages),shortLabels,{integer:true,format:v=>Math.round(v).toLocaleString()});
   monthlyRatingChart.innerHTML=lineChartSvg(monthly.map(m=>m.rating),shortLabels);
 
   monthGrid.innerHTML=monthly.map(m=>{
@@ -1931,7 +1971,6 @@ function resetForm(){
 }
 setRating(0);updateCoverPreview();updateConditionalFields();updateReadingDuration();render();
 </script>
-<script src="stats-custom.js"></script>
 <script src="cloud-sync.js"></script>
 </body>
 </html>

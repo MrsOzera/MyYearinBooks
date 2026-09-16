@@ -9,10 +9,14 @@ function getLocalState(){
     seriesFolders: Array.isArray(seriesFolders) ? seriesFolders : []
   };
 }
-
-function localStateString(){
-  return JSON.stringify(getLocalState());
+function normalizedState(state){
+  return {
+    books:Array.isArray(state?.books)?state.books:[],
+    seriesFolders:Array.isArray(state?.seriesFolders)?state.seriesFolders:[]
+  };
 }
+function localStateString(){ return JSON.stringify(getLocalState()); }
+function stateString(state){ return JSON.stringify(normalizedState(state)); }
 
 function showSyncStatus(text){
   let el=document.getElementById("cloudSyncStatus");
@@ -28,44 +32,69 @@ function showSyncStatus(text){
 async function cloudRequest(method, body){
   const token=localStorage.getItem(SYNC_TOKEN_KEY);
   if(!token) throw new Error("NO_TOKEN");
-  const res=await fetch(CLOUD_API+"/state",{
-    method,
-    headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-    body:body ? JSON.stringify(body) : undefined,
-    cache:"no-store"
-  });
+  let res;
+  try{
+    res=await fetch(CLOUD_API+"/state",{
+      method,
+      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
+      body:body ? JSON.stringify(body) : undefined,
+      cache:"no-store"
+    });
+  }catch(err){
+    throw new Error("NETWORK");
+  }
   if(res.status===401) throw new Error("UNAUTHORIZED");
   if(!res.ok) throw new Error("HTTP_"+res.status);
   return res.json();
 }
+
+let localDirty=false;
+let syncInProgress=false;
+let lastSyncError="";
+
+// Mark data dirty at the exact moment the app saves local changes.
+const originalPersist=persist;
+persist=function(){
+  originalPersist();
+  localDirty=true;
+  showSyncStatus("syncing…");
+};
+const originalPersistSeriesFolders=persistSeriesFolders;
+persistSeriesFolders=function(){
+  originalPersistSeriesFolders();
+  localDirty=true;
+  showSyncStatus("syncing…");
+};
 
 async function uploadLocalState(){
   const state=getLocalState();
   await cloudRequest("PUT",state);
   const s=JSON.stringify(state);
   localStorage.setItem(SYNC_LAST_STATE_KEY,s);
+  localDirty=false;
+  lastSyncError="";
   showSyncStatus("cloud synced ♡");
 }
 
 async function applyCloudState(state){
-  books=Array.isArray(state.books)?state.books:[];
-  seriesFolders=Array.isArray(state.seriesFolders)?state.seriesFolders:[];
+  const clean=normalizedState(state);
+  books=clean.books;
+  seriesFolders=clean.seriesFolders;
   localStorage.setItem(KEY,JSON.stringify(books));
   localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
   render();
-  const s=JSON.stringify({books,seriesFolders});
-  localStorage.setItem(SYNC_LAST_STATE_KEY,s);
+  localStorage.setItem(SYNC_LAST_STATE_KEY,JSON.stringify(clean));
+  localDirty=false;
+  lastSyncError="";
   showSyncStatus("cloud synced ♡");
 }
 
 function mergeById(cloudItems,localItems){
   const map=new Map();
   (localItems||[]).forEach(item=>map.set(item.id,item));
-  // Cloud wins for an item that exists on both devices, while unique local items are kept.
   (cloudItems||[]).forEach(item=>map.set(item.id,item));
   return [...map.values()];
 }
-
 function mergeStates(cloud,local){
   return {
     books:mergeById(cloud.books,local.books),
@@ -73,17 +102,39 @@ function mergeStates(cloud,local){
   };
 }
 
-let syncInProgress=false;
-async function reconcileWithCloud(){
+async function handleSyncError(e){
+  lastSyncError=e.message||"UNKNOWN";
+  if(e.message==="UNAUTHORIZED"){
+    localStorage.removeItem(SYNC_TOKEN_KEY);
+    const replacement=prompt("Your cloud sync key was not accepted. Enter the current sync key:");
+    if(replacement){
+      localStorage.setItem(SYNC_TOKEN_KEY,replacement.trim());
+      showSyncStatus("checking cloud…");
+    }else{
+      showSyncStatus("cloud sync locked");
+    }
+  }else if(e.message==="NETWORK"){
+    showSyncStatus("cloud unavailable · local changes kept");
+  }else{
+    showSyncStatus("sync error · "+e.message);
+  }
+}
+
+async function syncNow({allowPull=true}={}){
   if(syncInProgress)return;
   syncInProgress=true;
   try{
-    const cloud=await cloudRequest("GET");
+    // Important on iPhone: if the user has changed anything locally, NEVER pull first.
+    // Push the local state before looking at the cloud, so a failed upload cannot make a
+    // deleted/edited book immediately reappear from an older cloud copy.
+    if(localDirty){
+      await uploadLocalState();
+      return;
+    }
+
+    const cloud=normalizedState(await cloudRequest("GET"));
+    const cloudStr=JSON.stringify(cloud);
     const local=getLocalState();
-    const cloudStr=JSON.stringify({
-      books:Array.isArray(cloud.books)?cloud.books:[],
-      seriesFolders:Array.isArray(cloud.seriesFolders)?cloud.seriesFolders:[]
-    });
     const localStr=JSON.stringify(local);
     const last=localStorage.getItem(SYNC_LAST_STATE_KEY);
 
@@ -93,54 +144,43 @@ async function reconcileWithCloud(){
       return;
     }
 
-    const cloudEmpty=(!cloud.books?.length && !cloud.seriesFolders?.length);
-    const localEmpty=(!local.books.length && !local.seriesFolders.length);
+    const cloudEmpty=!cloud.books.length && !cloud.seriesFolders.length;
+    const localEmpty=!local.books.length && !local.seriesFolders.length;
 
     if(cloudEmpty && !localEmpty){
+      localDirty=true;
       await uploadLocalState();
       return;
     }
-
     if(!cloudEmpty && localEmpty){
-      await applyCloudState(cloud);
+      if(allowPull) await applyCloudState(cloud);
       return;
     }
 
-    // Normal two-device case:
-    // if this device hasn't changed since the last sync, pull the cloud copy.
+    // If we know this device hasn't changed since the last successful sync, cloud wins.
     if(last && last===localStr){
-      await applyCloudState(cloud);
+      if(allowPull) await applyCloudState(cloud);
       return;
     }
 
-    // If the cloud hasn't changed since our last sync, this device has the new changes.
+    // If cloud is still at our last successful state, local wins.
     if(last && last===cloudStr){
+      localDirty=true;
       await uploadLocalState();
       return;
     }
 
-    // First sync on a device, or both sides changed: merge safely.
-    // Cloud wins on matching IDs, but unique books/folders from either side are preserved.
+    // First contact / genuine divergence: preserve unique items from both sides.
     const merged=mergeStates(cloud,local);
     books=merged.books;
     seriesFolders=merged.seriesFolders;
     localStorage.setItem(KEY,JSON.stringify(books));
     localStorage.setItem(SERIES_FOLDERS_KEY,JSON.stringify(seriesFolders));
     render();
+    localDirty=true;
     await uploadLocalState();
   }catch(e){
-    if(e.message==="UNAUTHORIZED"){
-      localStorage.removeItem(SYNC_TOKEN_KEY);
-      const replacement=prompt("Your cloud sync key was not accepted. Enter the current sync key:");
-      if(replacement){
-        localStorage.setItem(SYNC_TOKEN_KEY,replacement.trim());
-        showSyncStatus("checking cloud…");
-      }else{
-        showSyncStatus("cloud sync locked");
-      }
-    }else{
-      showSyncStatus("cloud unavailable");
-    }
+    await handleSyncError(e);
   }finally{
     syncInProgress=false;
   }
@@ -155,40 +195,28 @@ async function startCloudSync(){
   }
 
   showSyncStatus("checking cloud…");
-  await reconcileWithCloud();
+  await syncNow({allowPull:true});
 
-  // Push local edits quickly.
-  let previous=localStateString();
+  // Push local edits promptly. Failed uploads remain dirty and retry; they are never overwritten by a pull.
   setInterval(async()=>{
-    const current=localStateString();
-    if(current!==previous){
-      previous=current;
-      showSyncStatus("syncing…");
-      try{ await reconcileWithCloud(); }
-      catch(e){ showSyncStatus("sync pending"); }
-      previous=localStateString();
-    }
-  },1500);
+    if(localDirty) await syncNow({allowPull:false});
+  },1200);
 
-  // Also pull changes made on another device while this page stays open.
+  // Pull changes made on another device only while this device has no unsynced local edits.
   setInterval(async()=>{
-    if(document.visibilityState==="visible"){
-      await reconcileWithCloud();
-      previous=localStateString();
+    if(document.visibilityState==="visible" && !localDirty){
+      await syncNow({allowPull:true});
     }
   },8000);
 
-  // iPhone Safari often suspends background pages. Sync immediately when it becomes active again.
   document.addEventListener("visibilitychange",async()=>{
     if(document.visibilityState==="visible"){
-      showSyncStatus("checking cloud…");
-      await reconcileWithCloud();
-      previous=localStateString();
+      showSyncStatus(localDirty?"syncing…":"checking cloud…");
+      await syncNow({allowPull:!localDirty});
     }
   });
   window.addEventListener("focus",async()=>{
-    await reconcileWithCloud();
-    previous=localStateString();
+    await syncNow({allowPull:!localDirty});
   });
 }
 
@@ -232,7 +260,6 @@ function setupReadingDateControl(id){
   if(!hidden || hidden.dataset.yearPrefillReady) return;
   hidden.dataset.yearPrefillReady="1";
   hidden.type="hidden";
-
   const wrap=document.createElement("div");
   wrap.style.cssText="display:grid;grid-template-columns:minmax(62px,.7fr) 18px minmax(62px,.7fr) 18px minmax(92px,1fr);align-items:center;border:1.5px solid #111;border-radius:16px;background:#fffafb;overflow:hidden;min-height:48px";
   wrap.innerHTML=`
@@ -259,19 +286,14 @@ function setupReadingDateControl(id){
     hidden.value=valid ? `${String(y).padStart(4,"0")}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}` : "";
     hidden.dispatchEvent(new Event("change",{bubbles:true}));
   }
-
   day.addEventListener("input",syncHidden);
   month.addEventListener("input",syncHidden);
-
   control.syncFromHidden=()=>{
     const match=String(hidden.value||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
     if(match){
-      year.value=match[1];
-      month.value=String(Number(match[2]));
-      day.value=String(Number(match[3]));
+      year.value=match[1];month.value=String(Number(match[2]));day.value=String(Number(match[3]));
     }else{
-      day.value="";
-      month.value="";
+      day.value="";month.value="";
       year.value=String(document.getElementById("year")?.value || selectedYear || new Date().getFullYear());
     }
   };
@@ -281,11 +303,7 @@ function setupReadingDateControl(id){
   };
   control.syncFromHidden();
 }
-
-function updateReadingDateYears(){
-  readingDateControls.forEach(c=>c.setYear());
-}
-
+function updateReadingDateYears(){ readingDateControls.forEach(c=>c.setYear()); }
 setupReadingDateControl("dateStarted");
 setupReadingDateControl("dateFinished");
 
@@ -303,7 +321,6 @@ window.editBook=id=>{
   originalEditBook(id);
   setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
 };
-
 document.getElementById("bookForm")?.addEventListener("reset",()=>{
   setTimeout(()=>readingDateControls.forEach(c=>c.syncFromHidden()),0);
 });

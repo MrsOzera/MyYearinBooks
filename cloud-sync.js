@@ -29,20 +29,26 @@ function showSyncStatus(text){
   el.textContent=text;
 }
 
-async function cloudRequest(method, body){
+// Safari-friendly transport: POST text/plain so the browser does not need a CORS preflight.
+async function cloudRequest(action, state){
   const token=localStorage.getItem(SYNC_TOKEN_KEY);
   if(!token) throw new Error("NO_TOKEN");
+
+  const path=action==="write" ? "/state/write" : "/state/read";
+  const payload=action==="write" ? {token,state} : {token};
+
   let res;
   try{
-    res=await fetch(CLOUD_API+"/state",{
-      method,
-      headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},
-      body:body ? JSON.stringify(body) : undefined,
+    res=await fetch(CLOUD_API+path,{
+      method:"POST",
+      headers:{"Content-Type":"text/plain;charset=UTF-8"},
+      body:JSON.stringify(payload),
       cache:"no-store"
     });
   }catch(err){
     throw new Error("NETWORK");
   }
+
   if(res.status===401) throw new Error("UNAUTHORIZED");
   if(!res.ok) throw new Error("HTTP_"+res.status);
   return res.json();
@@ -68,7 +74,7 @@ persistSeriesFolders=function(){
 
 async function uploadLocalState(){
   const state=getLocalState();
-  await cloudRequest("PUT",state);
+  await cloudRequest("write",state);
   const s=JSON.stringify(state);
   localStorage.setItem(SYNC_LAST_STATE_KEY,s);
   localDirty=false;
@@ -124,15 +130,12 @@ async function syncNow({allowPull=true}={}){
   if(syncInProgress)return;
   syncInProgress=true;
   try{
-    // Important on iPhone: if the user has changed anything locally, NEVER pull first.
-    // Push the local state before looking at the cloud, so a failed upload cannot make a
-    // deleted/edited book immediately reappear from an older cloud copy.
     if(localDirty){
       await uploadLocalState();
       return;
     }
 
-    const cloud=normalizedState(await cloudRequest("GET"));
+    const cloud=normalizedState(await cloudRequest("read"));
     const cloudStr=JSON.stringify(cloud);
     const local=getLocalState();
     const localStr=JSON.stringify(local);
@@ -157,20 +160,17 @@ async function syncNow({allowPull=true}={}){
       return;
     }
 
-    // If we know this device hasn't changed since the last successful sync, cloud wins.
     if(last && last===localStr){
       if(allowPull) await applyCloudState(cloud);
       return;
     }
 
-    // If cloud is still at our last successful state, local wins.
     if(last && last===cloudStr){
       localDirty=true;
       await uploadLocalState();
       return;
     }
 
-    // First contact / genuine divergence: preserve unique items from both sides.
     const merged=mergeStates(cloud,local);
     books=merged.books;
     seriesFolders=merged.seriesFolders;
@@ -197,12 +197,10 @@ async function startCloudSync(){
   showSyncStatus("checking cloud…");
   await syncNow({allowPull:true});
 
-  // Push local edits promptly. Failed uploads remain dirty and retry; they are never overwritten by a pull.
   setInterval(async()=>{
     if(localDirty) await syncNow({allowPull:false});
   },1200);
 
-  // Pull changes made on another device only while this device has no unsynced local edits.
   setInterval(async()=>{
     if(document.visibilityState==="visible" && !localDirty){
       await syncNow({allowPull:true});

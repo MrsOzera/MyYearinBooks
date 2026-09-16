@@ -1,4 +1,4 @@
-name: Load stats visual refinements
+name: Consolidate stats customizations
 
 on:
   push:
@@ -8,28 +8,88 @@ permissions:
   contents: write
 
 jobs:
-  update-site:
-    if: ${{ !contains(github.event.head_commit.message, '[stats-visuals-enabled]') }}
+  consolidate:
+    if: ${{ !contains(github.event.head_commit.message, '[stats-consolidated]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Add stats custom script
+      - name: Fold stats customizations into index.html
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          tag='<script src="stats-custom.js"></script>'
-          if tag not in s:
-              s=s.replace('<script src="cloud-sync.js"></script>', tag+'\n<script src="cloud-sync.js"></script>')
-              p.write_text(s,encoding='utf-8')
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old_colors = 'const chartColors=["#d98295","#f4b8c4","#a95c78","#fadadd","#c7a34a","#111111","#e8a6b3","#7f4450"];'
+          new_colors = 'const chartColors=["#F4B8C4","#F6DEA8","#BFD7EA","#BFD8C0","#D7C5E8","#F5C6A5","#FADADD","#BFE3DF"];'
+          if old_colors in s:
+              s = s.replace(old_colors, new_colors, 1)
+
+          monthly_helper = r'''
+function monthlyLineChartSvg(values,labels,{integer=false,format=v=>String(v)}={}){
+  const w=720,h=260,padL=50,padR=18,padT=22,padB=42;
+  const plotW=w-padL-padR,plotH=h-padT-padB;
+  const valid=values.filter(v=>Number.isFinite(v));
+  let max=Math.max(...valid,1);
+  if(integer) max=Math.max(1,Math.ceil(max));
+  let svg=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}">`;
+  for(let i=0;i<=5;i++){
+    const y=padT+plotH-(plotH*i/5);
+    const raw=max*i/5;
+    const label=integer ? Math.round(raw) : raw;
+    svg+=`<line class="chart-grid" x1="${padL}" y1="${y}" x2="${w-padR}" y2="${y}"></line>`;
+    svg+=`<text class="chart-value" x="${padL-7}" y="${y+4}" text-anchor="end">${format(label)}</text>`;
+  }
+  svg+=`<line class="chart-axis" x1="${padL}" y1="${padT+plotH}" x2="${w-padR}" y2="${padT+plotH}"></line>`;
+  const pts=[];
+  values.forEach((v,i)=>{
+    const x=padL+(plotW/(values.length-1))*i;
+    const y=padT+plotH-(Number(v||0)/max)*plotH;
+    pts.push([x,y,Number(v||0)]);
+    svg+=`<text class="chart-label" x="${x}" y="${h-18}" text-anchor="middle">${labels[i]}</text>`;
+  });
+  if(pts.length>1){
+    svg+=`<polyline class="chart-line" points="${pts.map(([x,y])=>`${x},${y}`).join(" ")}"></polyline>`;
+  }
+  pts.forEach(([x,y,v])=>{
+    svg+=`<circle class="chart-point" cx="${x}" cy="${y}" r="5"></circle>`;
+    svg+=`<text class="chart-value" x="${x}" y="${Math.max(12,y-9)}" text-anchor="middle">${format(v)}</text>`;
+  });
+  svg+="</svg>";
+  return svg;
+}
+
+'''
+          if 'function monthlyLineChartSvg(' not in s:
+              marker = 'function buildMonthlyData(yearBooks){'
+              if marker not in s:
+                  raise SystemExit('Could not find buildMonthlyData marker')
+              s = s.replace(marker, monthly_helper + marker, 1)
+
+          old_books = 'monthlyBooksChart.innerHTML=barChartSvg(monthly.map(m=>m.books),shortLabels,v=>Math.round(v).toString());'
+          new_books = 'monthlyBooksChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.books),shortLabels,{integer:true,format:v=>String(Math.round(v))});'
+          s = s.replace(old_books, new_books, 1)
+
+          old_pages = 'monthlyPagesChart.innerHTML=barChartSvg(monthly.map(m=>m.pages),shortLabels,v=>Math.round(v).toLocaleString());'
+          new_pages = 'monthlyPagesChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.pages),shortLabels,{integer:true,format:v=>Math.round(v).toLocaleString()});'
+          s = s.replace(old_pages, new_pages, 1)
+
+          title_css = '''\n/* Keep wrapped pie-chart titles visually together. */\n.pie-card .visual-title{\n  line-height:.82;\n  margin-bottom:10px;\n}\n'''
+          if '/* Keep wrapped pie-chart titles visually together. */' not in s:
+              s = s.replace('</style>', title_css + '\n</style>', 1)
+
+          s = s.replace('<script src="stats-custom.js"></script>\n', '')
+          s = s.replace('<script src="stats-custom.js"></script>', '')
+
+          p.write_text(s, encoding='utf-8')
           PY
-      - name: Commit
+      - name: Commit consolidated index
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           if ! git diff --cached --quiet; then
-            git commit -m "Enable stats visual refinements [stats-visuals-enabled]"
+            git commit -m "Fold stats customizations into index [stats-consolidated]"
             git push
           fi

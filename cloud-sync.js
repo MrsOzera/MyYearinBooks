@@ -1,6 +1,7 @@
 const CLOUD_API = "https://myyearinbooksapi.williams-leandra-53.workers.dev";
 const SYNC_TOKEN_KEY = "myYearInBooksSyncToken";
 const SYNC_LAST_STATE_KEY = "myYearInBooksLastSyncedState";
+const LAST_READING_YEAR_KEY = "myYearInBooksLastReadingYear";
 
 function getLocalState(){
   return {
@@ -111,6 +112,38 @@ async function startCloudSync(){
       showSyncStatus("cloud unavailable");
     }
   }
+}
+
+// Keep historical years available and remember the year currently being entered.
+getYears = function(){
+  const now=new Date().getFullYear();
+  const remembered=Number(localStorage.getItem(LAST_READING_YEAR_KEY));
+  return [...new Set([
+    now,
+    Number(selectedYear),
+    remembered,
+    ...books.map(b=>Number(b.year))
+  ].filter(y=>Number.isFinite(y)&&y>=1900&&y<=9999))].sort((a,b)=>b-a);
+};
+
+const originalSelectYear=window.selectYear;
+window.selectYear=y=>{
+  localStorage.setItem(LAST_READING_YEAR_KEY,String(y));
+  originalSelectYear(y);
+};
+
+document.getElementById("bookForm")?.addEventListener("submit",()=>{
+  const y=Number(document.getElementById("year")?.value);
+  if(Number.isFinite(y)&&y>=1900&&y<=9999){
+    localStorage.setItem(LAST_READING_YEAR_KEY,String(y));
+  }
+});
+
+const rememberedYear=Number(localStorage.getItem(LAST_READING_YEAR_KEY));
+if(Number.isFinite(rememberedYear)&&rememberedYear>=1900&&rememberedYear<=9999){
+  selectedYear=rememberedYear;
+  if(!editingId) yearInput.value=rememberedYear;
+  render();
 }
 
 startCloudSync();

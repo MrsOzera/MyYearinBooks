@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   consolidate:
-    if: ${{ !contains(github.event.head_commit.message, '[stats-consolidated]') }}
+    if: "${{ !contains(github.event.head_commit.message, '[stats-consolidated]') }}"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -67,13 +67,16 @@ function monthlyLineChartSvg(values,labels,{integer=false,format=v=>String(v)}={
                   raise SystemExit('Could not find buildMonthlyData marker')
               s = s.replace(marker, monthly_helper + marker, 1)
 
-          old_books = 'monthlyBooksChart.innerHTML=barChartSvg(monthly.map(m=>m.books),shortLabels,v=>Math.round(v).toString());'
-          new_books = 'monthlyBooksChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.books),shortLabels,{integer:true,format:v=>String(Math.round(v))});'
-          s = s.replace(old_books, new_books, 1)
-
-          old_pages = 'monthlyPagesChart.innerHTML=barChartSvg(monthly.map(m=>m.pages),shortLabels,v=>Math.round(v).toLocaleString());'
-          new_pages = 'monthlyPagesChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.pages),shortLabels,{integer:true,format:v=>Math.round(v).toLocaleString()});'
-          s = s.replace(old_pages, new_pages, 1)
+          s = s.replace(
+              'monthlyBooksChart.innerHTML=barChartSvg(monthly.map(m=>m.books),shortLabels,v=>Math.round(v).toString());',
+              'monthlyBooksChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.books),shortLabels,{integer:true,format:v=>String(Math.round(v))});',
+              1
+          )
+          s = s.replace(
+              'monthlyPagesChart.innerHTML=barChartSvg(monthly.map(m=>m.pages),shortLabels,v=>Math.round(v).toLocaleString());',
+              'monthlyPagesChart.innerHTML=monthlyLineChartSvg(monthly.map(m=>m.pages),shortLabels,{integer:true,format:v=>Math.round(v).toLocaleString()});',
+              1
+          )
 
           title_css = '''\n/* Keep wrapped pie-chart titles visually together. */\n.pie-card .visual-title{\n  line-height:.82;\n  margin-bottom:10px;\n}\n'''
           if '/* Keep wrapped pie-chart titles visually together. */' not in s:

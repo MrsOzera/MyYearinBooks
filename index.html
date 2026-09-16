@@ -666,6 +666,64 @@ h1,.page-heading,.form-title{font-weight:400;}
   }
 }
 
+
+/* v2.7 iPhone header layout — badge above, title gets full width */
+@media (max-width: 600px){
+  .topline{
+    display:block;
+    position:relative;
+    padding:0;
+    min-height:0;
+    margin-bottom:14px;
+    overflow:visible;
+  }
+
+  .topline > div:first-child{
+    width:100%;
+    min-width:0;
+  }
+
+  .topline .eyebrow{
+    /* leave the top-right corner free for the book count */
+    padding-right:105px;
+    min-height:52px;
+    display:flex;
+    align-items:flex-end;
+    margin-bottom:7px;
+  }
+
+  .topline h1{
+    display:block;
+    width:100%;
+    max-width:100%;
+    margin:0;
+    padding:0;
+    white-space:nowrap;
+    overflow:visible;
+    text-overflow:clip;
+    font-size:clamp(2.15rem, 10.2vw, 2.75rem);
+    line-height:1.05;
+  }
+
+  .topline .subtitle{
+    margin-top:8px;
+    width:100%;
+  }
+
+  .topline .count{
+    position:absolute;
+    top:0;
+    right:0;
+    margin:0;
+    z-index:3;
+    min-width:72px;
+    max-width:88px;
+    padding:9px 12px;
+    text-align:center;
+    line-height:1.15;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -674,7 +732,7 @@ h1,.page-heading,.form-title{font-weight:400;}
     <div>
       <div class="eyebrow">Book tracker ♡</div>
       <h1>my year in books</h1>
-      <p class="subtitle">Soft pink palette with black framing and cute headings.</p>
+      
     </div>
     <div class="count" id="bookCount">0 books</div>
   </header>
@@ -893,7 +951,7 @@ h1,.page-heading,.form-title{font-weight:400;}
     <section class="books" id="sideQuestList"></section>
   </section>
 
-  <footer>leandra ♡ · pilot v2.6</footer>
+  <footer>leandra ♡</footer>
 </main>
 
 <script>

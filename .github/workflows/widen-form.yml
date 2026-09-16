@@ -1,0 +1,57 @@
+name: Widen add and edit form
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    if: ${{ !contains(github.event.head_commit.message, '[site-adjustment]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out site
+        uses: actions/checkout@v4
+
+      - name: Make add/edit form a little wider
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          html = path.read_text(encoding='utf-8')
+          marker = '/* roomier add/edit form */'
+
+          if marker not in html:
+              css = '''
+          /* roomier add/edit form */
+          @media (min-width: 700px){
+            .form-card{
+              width:calc(100% + 72px);
+              margin-left:-36px;
+              margin-right:-36px;
+            }
+          }
+          @media (max-width: 699px){
+            .form-card{
+              width:calc(100% + 12px);
+              margin-left:-6px;
+              margin-right:-6px;
+            }
+          }
+          '''
+              html = html.replace('</style>', css + '\n</style>', 1)
+              path.write_text(html, encoding='utf-8')
+          PY
+
+      - name: Commit change
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "Widen add and edit form [site-adjustment]"
+            git push
+          fi

@@ -1317,18 +1317,6 @@ window.chooseSearchResult=async function(payload){
   $("coverUrl").value=d.coverUrl||"";
   updateCoverPreview();
 
-  // Try to suggest genre/subgenres from Open Library subjects.
-  let subjects=Array.isArray(d.subjects)?d.subjects:[];
-  if(subjects.length<3 && d.workKey){
-    const workSubjects=await fetchWorkSubjects(d.workKey);
-    subjects=[...new Set([...subjects,...workSubjects])];
-  }
-  const inferred=inferGenreAndSubgenres(subjects);
-  if(inferred.genre && !$("genre").value.trim()) $("genre").value=inferred.genre;
-  if(inferred.subgenres.length && !$("subgenre").value.trim()) {
-    $("subgenre").value=inferred.subgenres.join(", ");
-  }
-
   $("pages").value="";
   $("pages").placeholder="Looking up page count…";
 

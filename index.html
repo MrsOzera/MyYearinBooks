@@ -778,6 +778,7 @@ h1,.page-heading,.form-title{font-weight:400;}
   </div>
 
   <section class="card form-card hidden-field" id="bookFormCard" data-add-read-collapse-v1>
+    <button type="button" class="icon-btn" id="minimizeReadFormBtn" title="Minimize" aria-label="Minimize add read form" style="position:absolute;top:12px;right:12px;z-index:3;font-size:1.2rem;line-height:1;padding:7px 10px">−</button>
     <h2 class="form-title script" id="formHeading">New Read</h2>
     <form id="bookForm">
       <div class="search-row">
@@ -1979,6 +1980,7 @@ setRating(0);updateCoverPreview();updateConditionalFields();updateReadingDuratio
   const addReadToggleWrap=document.getElementById("addReadToggleWrap");
   const bookForm=document.getElementById("bookForm");
   const cancelBtn=document.getElementById("cancelBtn");
+  const minimizeReadFormBtn=document.getElementById("minimizeReadFormBtn");
 
   function openReadForm(){
     formCard?.classList.remove("hidden-field");
@@ -2008,6 +2010,12 @@ setRating(0);updateCoverPreview();updateConditionalFields();updateReadingDuratio
 
   bookForm?.addEventListener("submit",()=>setTimeout(closeReadForm,0));
   cancelBtn?.addEventListener("click",()=>setTimeout(closeReadForm,0));
+  minimizeReadFormBtn?.addEventListener("click",()=>{
+    if(typeof editingId!=="undefined") editingId=null;
+    bookForm?.reset();
+    if(typeof resetForm==="function") resetForm();
+    closeReadForm();
+  });
 })();
 </script>
 <script src="cloud-sync.js"></script>

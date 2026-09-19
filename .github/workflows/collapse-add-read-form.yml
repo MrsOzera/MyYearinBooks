@@ -95,3 +95,5 @@ jobs:
           git add index.html
           git commit -m "Collapse add-read form and simplify monthly graphs"
           git push
+
+# trigger-v2

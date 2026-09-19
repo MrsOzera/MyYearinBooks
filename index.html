@@ -773,7 +773,11 @@ h1,.page-heading,.form-title{font-weight:400;}
 
   <section class="page active" id="booksPage">
 
-  <section class="card form-card">
+  <div class="actions" id="addReadToggleWrap" style="margin:0 0 14px">
+    <button class="primary" type="button" id="addReadBtn">＋ Add New Read</button>
+  </div>
+
+  <section class="card form-card hidden-field" id="bookFormCard" data-add-read-collapse-v1>
     <h2 class="form-title script" id="formHeading">New Read</h2>
     <form id="bookForm">
       <div class="search-row">
@@ -876,19 +880,16 @@ h1,.page-heading,.form-title{font-weight:400;}
     <h2 class="page-heading script" id="monthsHeading">by month ♡</h2>
     <section class="card visual-section">
       <h3 class="visual-title script">Books Finished</h3>
-      <p class="visual-subtitle">January to December at a glance.</p>
       <div class="chart-box" id="monthlyBooksChart"></div>
     </section>
 
     <section class="card visual-section">
       <h3 class="visual-title script">Pages by Month</h3>
-      <p class="visual-subtitle">Total pages assigned to the month each book was finished.</p>
       <div class="chart-box" id="monthlyPagesChart"></div>
     </section>
 
     <section class="card visual-section">
       <h3 class="visual-title script">Average Rating</h3>
-      <p class="visual-subtitle">How your average rating changed through the year.</p>
       <div class="chart-box" id="monthlyRatingChart"></div>
     </section>
 
@@ -1970,6 +1971,44 @@ function resetForm(){
   yearInput.value=selectedYear;
 }
 setRating(0);updateCoverPreview();updateConditionalFields();updateReadingDuration();render();
+</script>
+<script>
+(() => {
+  const formCard=document.getElementById("bookFormCard");
+  const addReadBtn=document.getElementById("addReadBtn");
+  const addReadToggleWrap=document.getElementById("addReadToggleWrap");
+  const bookForm=document.getElementById("bookForm");
+  const cancelBtn=document.getElementById("cancelBtn");
+
+  function openReadForm(){
+    formCard?.classList.remove("hidden-field");
+    if(addReadToggleWrap) addReadToggleWrap.classList.add("hidden-field");
+    requestAnimationFrame(()=>formCard?.scrollIntoView({behavior:"smooth",block:"start"}));
+  }
+
+  function closeReadForm(){
+    formCard?.classList.add("hidden-field");
+    if(addReadToggleWrap) addReadToggleWrap.classList.remove("hidden-field");
+  }
+
+  addReadBtn?.addEventListener("click",()=>{
+    if(typeof editingId!=="undefined") editingId=null;
+    bookForm?.reset();
+    if(typeof resetForm==="function") resetForm();
+    openReadForm();
+  });
+
+  if(typeof window.editBook==="function"){
+    const originalEditBook=window.editBook;
+    window.editBook=id=>{
+      openReadForm();
+      originalEditBook(id);
+    };
+  }
+
+  bookForm?.addEventListener("submit",()=>setTimeout(closeReadForm,0));
+  cancelBtn?.addEventListener("click",()=>setTimeout(closeReadForm,0));
+})();
 </script>
 <script src="cloud-sync.js"></script>
 </body>

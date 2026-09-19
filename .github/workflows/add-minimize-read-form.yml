@@ -1,0 +1,53 @@
+name: Add minimize read form
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add minimize button
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = 'id="minimizeReadFormBtn"'
+          if marker in s:
+              raise SystemExit(0)
+
+          old = '''  <section class="card form-card hidden-field" id="bookFormCard" data-add-read-collapse-v1>\n    <h2 class="form-title script" id="formHeading">New Read</h2>'''
+          new = '''  <section class="card form-card hidden-field" id="bookFormCard" data-add-read-collapse-v1>\n    <button type="button" class="icon-btn" id="minimizeReadFormBtn" title="Minimize" aria-label="Minimize add read form" style="position:absolute;top:12px;right:12px;z-index:3;font-size:1.2rem;line-height:1;padding:7px 10px">−</button>\n    <h2 class="form-title script" id="formHeading">New Read</h2>'''
+          if old not in s:
+              raise SystemExit('Could not find book form header')
+          s = s.replace(old, new, 1)
+
+          old_js = '''  const cancelBtn=document.getElementById("cancelBtn");'''
+          new_js = '''  const cancelBtn=document.getElementById("cancelBtn");\n  const minimizeReadFormBtn=document.getElementById("minimizeReadFormBtn");'''
+          if old_js not in s:
+              raise SystemExit('Could not find add-read toggle script')
+          s = s.replace(old_js, new_js, 1)
+
+          old_tail = '''  cancelBtn?.addEventListener("click",()=>setTimeout(closeReadForm,0));\n})();'''
+          new_tail = '''  cancelBtn?.addEventListener("click",()=>setTimeout(closeReadForm,0));\n  minimizeReadFormBtn?.addEventListener("click",()=>{\n    if(typeof editingId!=="undefined") editingId=null;\n    bookForm?.reset();\n    if(typeof resetForm==="function") resetForm();\n    closeReadForm();\n  });\n})();'''
+          if old_tail not in s:
+              raise SystemExit('Could not find collapse handler tail')
+          s = s.replace(old_tail, new_tail, 1)
+
+          p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit change
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m "Add minimize button to read form"
+          git push

@@ -365,4 +365,5 @@ renderSeriesFolders=function(){
 };
 renderSeriesFolders();
 
+document.querySelector(".topline h1")?.replaceChildren("my year in books ♡");
 startCloudSync();
